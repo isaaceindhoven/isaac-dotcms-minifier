@@ -29,7 +29,6 @@ import nl.isaac.dotcms.minify.MinifyCacheKey;
 import nl.isaac.dotcms.minify.exception.DotCMSFileNotFoundException;
 import nl.isaac.dotcms.minify.shared.FileTools;
 import nl.isaac.dotcms.minify.shared.HostTools;
-import nl.isaac.dotcms.minify.util.ParamValidationUtil;
 import nl.isaac.dotcms.minify.util.StringListUtil;
 
 import org.apache.commons.io.IOUtils;
@@ -83,9 +82,8 @@ public class MinifyServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
-		// Check if the "uris" parameter is valid
-		String urisAsString = request.getParameter("uris");
-		ParamValidationUtil.validateParamNotNull(urisAsString, "uris");
+		// Make sure the "uris" parameter returns a string
+		String urisAsString = request.getParameter("uris") != null ? request.getParameter("uris") : "";
 		
 		// Define variables whos content will be determined during the for loop.
 		StringBuilder fileContentOfUris = new StringBuilder();
@@ -100,35 +98,40 @@ public class MinifyServlet extends HttpServlet {
 		
 		try {
 			for (String uriAsString : StringListUtil.getCleanStringList(urisAsString)) {
-				
-				URI uri = new URI(uriAsString);
-				
-				ContentType currentContentType = ContentType.getContentType(uri);
-				overAllContentType = overAllContentType == null? currentContentType: overAllContentType;
-				
-				if (currentContentType == overAllContentType) {
-					Host host = getHostOfUri(uri, defaultHost);
-						
-					if (isDebugMode) {
-
-						fileContentOfUris.append(getOriginalFile(uri, host, isLiveMode));
-						isContentModified = true;
-						
+				if(UtilMethods.isSet(uriAsString)) {
+					URI uri = new URI(uriAsString);
+					
+					ContentType currentContentType = ContentType.getContentType(uri);
+					overAllContentType = overAllContentType == null? currentContentType: overAllContentType;
+					
+					if (currentContentType == overAllContentType) {
+						Host host = getHostOfUri(uri, defaultHost);
+							
+						if (isDebugMode) {
+	
+							fileContentOfUris.append(getOriginalFile(uri, host, isLiveMode));
+							isContentModified = true;
+							
+						} else {
+							MinifyCacheKey key = new MinifyCacheKey(uri.getPath(), host.getHostname(), isLiveMode);
+	
+							MinifyCacheFile file = MinifyCacheHandler.INSTANCE.get(key);
+							fileContentOfUris.append(file.getFileData());
+	
+							Date modDate = file.getModDate();
+							isContentModified |=  modDate.compareTo(ifModifiedSince) >= 0;
+						}
 					} else {
-						MinifyCacheKey key = new MinifyCacheKey(uri.getPath(), host.getHostname(), isLiveMode);
-
-						MinifyCacheFile file = MinifyCacheHandler.INSTANCE.get(key);
-						fileContentOfUris.append(file.getFileData());
-
-						Date modDate = file.getModDate();
-						isContentModified |=  modDate.compareTo(ifModifiedSince) >= 0;
+						Logger.warn(MinifyServlet.class, "Encountered uri with different contentType than the others, skipping file. Expected " + overAllContentType.extension + ", found: " + currentContentType.extension);
 					}
 				} else {
-					Logger.warn(MinifyServlet.class, "Encountered uri with different contentType than the others, skipping file. Expected " + overAllContentType.extension + ", found: " + currentContentType.extension);
+					Logger.info(this, "Skipping empty uri in uris='" + urisAsString + "'");
 				}
 			}
 			
-			response.setContentType(overAllContentType.contentTypeString);
+			if(overAllContentType != null) {
+				response.setContentType(overAllContentType.contentTypeString);
+			}
 			
 			response.addHeader("Cache-Control", "public, max-age=" + BROWSER_CACHE_MAX_AGE);
 			response.setDateHeader("Expires", new Date().getTime() + (BROWSER_CACHE_MAX_AGE * 1000));

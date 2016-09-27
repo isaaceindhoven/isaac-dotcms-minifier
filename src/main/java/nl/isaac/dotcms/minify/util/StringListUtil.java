@@ -11,7 +11,10 @@ package nl.isaac.dotcms.minify.util;
  */
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+
+import com.dotmarketing.util.UtilMethods;
 
 public class StringListUtil {
 	private StringListUtil() {};
@@ -21,7 +24,11 @@ public class StringListUtil {
 	}
 	
 	public static List<String> getStringList(String[] stringArray) {
-		return Arrays.asList(stringArray);
+		if(stringArray.length > 0 && UtilMethods.isSet(stringArray[0])) {
+			return Arrays.asList(stringArray);
+		} else {
+			return Collections.emptyList();
+		}
 	}
 	
 	private static String removeNewlinesTabsAndSpaces(String input) {

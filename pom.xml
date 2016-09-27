@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nl.isaac.dotcms.plugin.minifier</groupId>
 	<artifactId>isaac-dotcms-minifier</artifactId>
-	<version>2.5.0</version>
+	<version>2.5.1</version>
 	<packaging>bundle</packaging>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -16,17 +16,34 @@
 		<name>ISAAC Software Solutions</name>
 		<url>http://www.isaac.nl</url>
 	</organization>
+	<repositories>
+		<repository>
+			<id>dotcms</id>
+			<name>dotcms Maven Repository</name>
+			<url>http://repo.dotcms.com/artifactory/repo</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.5.1</version>
+					<configuration>
+						<source>1.6</source>
+						<target>1.6</target>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.5.1</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
@@ -38,7 +55,9 @@
 						<Bundle-Name>${project.artifactId}</Bundle-Name>
 						<Bundle-Version>${project.version}</Bundle-Version>
 						<Bundle-Activator>nl.isaac.dotcms.minify.osgi.MinifierActivator</Bundle-Activator>
-						<Export-Package>nl.isaac.dotcms.minify.viewtool</Export-Package>
+						<Export-Package>nl.isaac.dotcms.minify.viewtool,
+							nl.isaac.dotcms.minify.api,
+							com.google.javascript.jscomp</Export-Package>
 						<Import-Package>nl.isaac.dotcms.minify.viewtool,
 							org.osgi.framework,
 							com.dotmarketing.osgi,
@@ -59,13 +78,6 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>com.dotcms</groupId>
-			<artifactId>dotcms-core</artifactId>
-			<version>2.3.1</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/src/main/resources/dotcms-core-2.3.1.jar</systemPath>
-		</dependency>
-		<dependency>
 			<groupId>com.yahoo.platform.yui</groupId>
 			<artifactId>yuicompressor</artifactId>
 			<version>2.4.7</version>
@@ -73,7 +85,7 @@
 		<dependency>
 			<groupId>com.google.javascript</groupId>
 			<artifactId>closure-compiler</artifactId>
-			<version>v20130411</version>
+			<version>v20131014</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -103,6 +115,18 @@
 			<artifactId>urlrewritefilter</artifactId>
 			<version>3.2.0</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.dotcms</groupId>
+			<artifactId>dotcms</artifactId>
+			<version>2.5.1</version>
+			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.velocity</groupId>
