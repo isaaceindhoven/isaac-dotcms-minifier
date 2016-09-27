@@ -50,7 +50,10 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 		File file = FileFactory.getFileByURI(minifyCacheFileKey.getUri(), host, minifyCacheFileKey.getLive());
 		if(file == null || file.getURI() == null) {
 			Logger.error(MinifyCacheItemHandler.class, "Can't find file: " + minifyCacheFileKey.getReadableString());
-			throw new DotCMSFileNotFoundException("File with uri " + minifyCacheFileKey.getUri() + "not found");
+			if(minifyCacheFileKey.getUri().startsWith("dotcms")) {
+				Logger.warn(this.getClass(), "A filename may not start with 'dotcms'... This is a dotCMS issue!");
+			}
+			throw new DotCMSFileNotFoundException("File with uri " + minifyCacheFileKey.getUri() + " not found");
 		}
 		return get(file, host);
 	}

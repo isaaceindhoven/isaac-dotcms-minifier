@@ -11,6 +11,7 @@ package nl.isaac.dotcms.minify.servlet;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -18,9 +19,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import nl.isaac.dotcms.minify.MinifyCacheFile;
 import nl.isaac.dotcms.minify.MinifyCacheFileKey;
 import nl.isaac.dotcms.minify.MinifyCacheHandler;
 import nl.isaac.dotcms.minify.exception.DotCMSFileNotFoundException;
+import nl.isaac.dotcms.minify.shared.Configuration;
 
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.APILocator;
@@ -70,7 +73,11 @@ public class MinifyServlet extends HttpServlet {
 		}
 		
 		//check if we need the live or working version
-		Boolean live = isLive(request);
+		boolean live = isLive(request);
+		
+		boolean contentModified = false;
+		Date ifModifiedSince = new Date(request.getDateHeader("If-Modified-Since"));
+		StringBuilder output = new StringBuilder();
 		
 		for(String uri: uris) {
 			String modifiedUri = uri.trim().replaceAll("(\\r|\\n)", "");
@@ -93,14 +100,33 @@ public class MinifyServlet extends HttpServlet {
 				
 				//create a key for this uri and retrieve from the cache
 				String key = new MinifyCacheFileKey(modifiedUri, live, host).getKey();
+				MinifyCacheFile file = MinifyCacheHandler.getInstance().get(key);
+				
+				Date modDate = file.getModDate();
+				if (modDate.compareTo(ifModifiedSince) >= 0) contentModified = true;
+				
 				try {
-					response.getWriter().write(MinifyCacheHandler.getInstance().get(key).getFileData());
+					output.append(file.getFileData());
 				} catch (DotCMSFileNotFoundException e) {
 					Logger.warn(this.getClass(), "Not adding file with URI " + modifiedUri + " and host " + host.getHostname() + " since it can't be found in dotCMS");
 				}
+				
 			} else {
 				Logger.warn(this.getClass(), "Can't minify uri that is empty. Maybe there's an error in the Minifier call? uris='" + request.getParameter("uris") + "'");
 			}
+		}
+		int maxAge = new Integer(Configuration.getBrowserCacheMaxAge()).intValue();
+		response.addHeader("Cache-Control", "public, max-age=" + maxAge);
+		response.setDateHeader("Expires", new Date().getTime() + (maxAge * 1000));
+		
+		if (contentModified) {
+			response.setDateHeader("Last-Modified", new Date().getTime());
+			response.getWriter().write(output.toString());
+
+		} else {
+			// No files are modified since the browser cached it, so send status 304
+			// Browser will then use the file from his cache
+			response.setStatus(304);
 		}
 		
 		Calendar end = Calendar.getInstance();
