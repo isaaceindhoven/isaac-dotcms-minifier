@@ -13,6 +13,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.lucene.queryParser.ParseException;
+
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.beans.Identifier;
 import com.dotmarketing.beans.Permission;
@@ -24,6 +26,8 @@ import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.categories.model.Category;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPIPostHook;
+import com.dotmarketing.portlets.contentlet.business.DotContentletStateException;
+import com.dotmarketing.portlets.contentlet.business.DotContentletValidationException;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.portlets.files.model.File;
 import com.dotmarketing.portlets.folders.model.Folder;
@@ -630,6 +634,29 @@ public class MinifyContentletPostHook implements ContentletAPIPostHook {
 			throws DotDataException, DotSecurityException {
 		//added in 1.9.1.4
 		
+	}
+
+	public void saveDraft(Contentlet arg0,
+			Map<Relationship, List<Contentlet>> arg1, List<Category> arg2,
+			List<Permission> arg3, User arg4, boolean arg5)
+			throws IllegalArgumentException, DotDataException,
+			DotSecurityException, DotContentletStateException,
+			DotContentletValidationException {
+		// added in 1.9.2
+		
+	}
+
+	public void searchByIdentifier(String arg0, int arg1, int arg2,
+			String arg3, User arg4, boolean arg5) throws DotDataException,
+			DotSecurityException, ParseException {
+		// added in 1.9.2
+		
+	}
+
+	public void searchByIdentifier(String arg0, int arg1, int arg2,
+			String arg3, User arg4, boolean arg5, int arg6)
+			throws DotDataException, DotSecurityException, ParseException {
+		// added in 1.9.2
 	}
 
 }
