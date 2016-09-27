@@ -9,18 +9,17 @@ package nl.isaac.dotcms.minify.servlet;
 */
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import nl.isaac.dotcms.minify.MinifyCacheFile;
 import nl.isaac.dotcms.minify.MinifyCacheFileKey;
 import nl.isaac.dotcms.minify.MinifyCacheHandler;
 import nl.isaac.dotcms.minify.exception.DotCMSFileNotFoundException;
@@ -101,12 +100,13 @@ public class MinifyServlet extends HttpServlet {
 				
 				//create a key for this uri and retrieve from the cache
 				String key = new MinifyCacheFileKey(modifiedUri, live, host).getKey();
-				
-				Date modDate = MinifyCacheHandler.getInstance().get(key).getModDate();
+				MinifyCacheFile file = MinifyCacheHandler.getInstance().get(key);
+
+				Date modDate = file.getModDate();
 				if (modDate.compareTo(ifModifiedSince) >= 0) contentModified = true;
 				
 				try {
-					output.append(MinifyCacheHandler.getInstance().get(key).getFileData());
+					output.append(file.getFileData());
 				} catch (DotCMSFileNotFoundException e) {
 					Logger.warn(this.getClass(), "Not adding file with URI " + modifiedUri + " and host " + host.getHostname() + " since it can't be found in dotCMS");
 				}
