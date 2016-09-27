@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nl.isaac.dotcms.plugin.minifier</groupId>
 	<artifactId>isaac-dotcms-minifier</artifactId>
-	<version>3.2.0</version>
+	<version>3.2.1</version>
 	<packaging>bundle</packaging>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -58,14 +58,7 @@
 						<Export-Package>nl.isaac.dotcms.minify.viewtool,
 							nl.isaac.dotcms.minify.api,
 							com.google.javascript.jscomp</Export-Package>
-						<Import-Package>com.dotcms.repackage.org.osgi.framework,
-							com.dotmarketing.osgi,
-							com.dotmarketing.beans,
-							com.dotmarketing.plugin.business,
-							com.dotmarketing.portlets.fileassets.business,
-							com.dotmarketing.portlets.languagesmanager.business,
-							com.dotmarketing.portlets.languagesmanager.model,
-							com.liferay.portal</Import-Package>
+						<Import-Package />
 						<DynamicImport-Package>*</DynamicImport-Package>
 						<Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
 						<Embed-Transitive>true</Embed-Transitive>
@@ -132,6 +125,12 @@
 			<groupId>com.dotcms.lib</groupId>
 			<artifactId>dot.portlet</artifactId>
 			<version>1.0_1</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.quartz-scheduler</groupId>
+			<version>1.8.6</version>
+			<artifactId>quartz</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
