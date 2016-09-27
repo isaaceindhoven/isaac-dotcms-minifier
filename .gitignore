@@ -1,0 +1,7 @@
+**/.settings/*
+**/node_modules/*
+**/target/*
+.classpath
+.factorypath
+.project
+!org.eclipse.wst.validation.prefs
