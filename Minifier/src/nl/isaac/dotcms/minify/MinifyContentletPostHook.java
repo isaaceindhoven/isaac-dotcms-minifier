@@ -28,6 +28,7 @@ import com.dotmarketing.portlets.categories.model.Category;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPIPostHook;
 import com.dotmarketing.portlets.contentlet.business.DotContentletStateException;
 import com.dotmarketing.portlets.contentlet.business.DotContentletValidationException;
+import com.dotmarketing.portlets.contentlet.business.DotReindexStateException;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.portlets.files.model.File;
 import com.dotmarketing.portlets.folders.model.Folder;
@@ -657,6 +658,16 @@ public class MinifyContentletPostHook implements ContentletAPIPostHook {
 			String arg3, User arg4, boolean arg5, int arg6)
 			throws DotDataException, DotSecurityException, ParseException {
 		// added in 1.9.2
+	}
+	
+	public void refreshContentUnderFolder(Folder arg0)
+			throws DotReindexStateException {
+		// added in 1.9.3.1
+	}
+	
+	public void refreshContentUnderHost(Host arg0)
+			throws DotReindexStateException {
+		// added in 1.9.3.1
 	}
 
 }
