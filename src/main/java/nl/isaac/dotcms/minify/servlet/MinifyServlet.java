@@ -31,8 +31,7 @@ import nl.isaac.dotcms.minify.shared.FileTools;
 import nl.isaac.dotcms.minify.shared.HostTools;
 import nl.isaac.dotcms.minify.util.StringListUtil;
 
-import org.apache.commons.io.IOUtils;
-
+import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.portlets.fileassets.business.FileAsset;

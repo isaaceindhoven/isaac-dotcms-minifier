@@ -23,8 +23,7 @@ import nl.isaac.dotcms.minify.shared.FileTools;
 import nl.isaac.dotcms.minify.shared.HostTools;
 import nl.isaac.dotcms.minify.util.ParamValidationUtil;
 
-import org.apache.commons.io.IOUtils;
-
+import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.CacheLocator;
 import com.dotmarketing.business.DotCacheAdministrator;
