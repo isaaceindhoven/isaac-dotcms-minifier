@@ -4,6 +4,8 @@ package nl.isaac.dotcms.minify;
 * under a Creative Commons Attribution 3.0 Unported License
 * - http://creativecommons.org/licenses/by/3.0/
 * - http://www.geekyplugins.com/
+* 
+* @copyright Copyright (c) 2011 ISAAC Software Solutions B.V. (http://www.isaac.nl)
 */
 
 import java.io.Serializable;
@@ -623,5 +625,11 @@ public class MinifyContentletPostHook implements ContentletAPIPostHook {
 	@Override
 	public void searchIndex(String arg0, int arg1, int arg2, String arg3,
 			User arg4, boolean arg5, List<ContentletSearch> arg6) {}
+	
+	public void deleteVersion(Contentlet arg0, User arg1, boolean arg2)
+			throws DotDataException, DotSecurityException {
+		//added in 1.9.1.4
+		
+	}
 
 }

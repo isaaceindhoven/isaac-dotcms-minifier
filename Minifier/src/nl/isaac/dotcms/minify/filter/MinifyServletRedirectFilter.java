@@ -4,6 +4,8 @@ package nl.isaac.dotcms.minify.filter;
 * under a Creative Commons Attribution 3.0 Unported License
 * - http://creativecommons.org/licenses/by/3.0/
 * - http://www.geekyplugins.com/
+* 
+* @copyright Copyright (c) 2011 ISAAC Software Solutions B.V. (http://www.isaac.nl)
 */
 
 import java.io.IOException;
