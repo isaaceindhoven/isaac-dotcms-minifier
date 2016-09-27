@@ -16,14 +16,14 @@ public class PropertiesManager {
 	private final String pluginName;
 	private final Bundle bundle;
 	private Map<String, String> properties;
-	
+
 	public PropertiesManager() {
 		this.bundle = FrameworkUtil.getBundle(this.getClass());
-		this.pluginName = "osgi/" + bundle.getHeaders().get("Bundle-Name") + "/" + bundle.getBundleId(); 
+		this.pluginName = "osgi/" + bundle.getHeaders().get("Bundle-Name") + "/" + bundle.getBundleId();
 		this.getPropertiesFromPluginAPI = true;
-		Logger.info(this, "Using plugin name '" + pluginName + "', use-plugin-api=" + getPropertiesFromPluginAPI);
+		Logger.debug(this, "Using plugin name '" + pluginName + "', use-plugin-api=" + getPropertiesFromPluginAPI);
 	}
-	
+
 	public String get(String key) {
 		if(getPropertiesFromPluginAPI) {
 			try {
@@ -31,36 +31,36 @@ public class PropertiesManager {
 				if (value != null) {
 					return value;
 				}
-				Logger.info(this, "Value for " + key + "=null in " + pluginName + ", so assuming the Configuration plugin is not available");
+				Logger.debug(this, "Value for " + key + "=null in " + pluginName + ", so assuming the Configuration plugin is not available");
 			} catch (Exception e) {
-				Logger.info(this, "Can't retrieve property " + key + " in " + pluginName + ", so assuming the Configuration plugin is not available");
+				Logger.warn(this, "Can't retrieve property " + key + " in " + pluginName + ", so assuming the Configuration plugin is not available", e);
 			}
-			
+
 			getPropertiesFromPluginAPI = false;
-			Logger.info(this, "Reading properties from own properties file for plugin " + pluginName);
+			Logger.debug(this, "Reading properties from own properties file for plugin " + pluginName);
 			properties = getLocalProperties();
 		}
-		
+
 		return properties.get(key);
 	}
 
 	private Map<String, String> getLocalProperties() {
 		Map<String, String> localProperties = new ConcurrentHashMap<String, String>();
 		try {
-			
+
 			// Read all the properties from the properties file
 			URL resourceURL = bundle.getResource("conf/plugin.properties");
 			PropertyResourceBundle resourceBundle = new PropertyResourceBundle(resourceURL.openStream());
-			
+
 			// Put the properties in the map
 			for(String key: resourceBundle.keySet()) {
 				localProperties.put(key, resourceBundle.getString(key));
 			}
-			
+
 		} catch (IOException e) {
 			Logger.warn(this, "Exception while retrieving properties from plugin.properties", e);
 		}
-		
+
 		return localProperties;
 	}
 }

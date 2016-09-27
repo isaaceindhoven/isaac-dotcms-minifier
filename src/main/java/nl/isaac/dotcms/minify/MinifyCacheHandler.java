@@ -1,12 +1,12 @@
 package nl.isaac.dotcms.minify;
 
 /*
- * Dotcms minifier by ISAAC is licensed under a 
+ * Dotcms minifier by ISAAC is licensed under a
  * Creative Commons Attribution 3.0 Unported License
- * 
+ *
  * - http://creativecommons.org/licenses/by/3.0/
  * - http://www.geekyplugins.com/
- * 
+ *
  * ISAAC Software Solutions B.V. (http://www.isaac.nl)
  */
 
@@ -15,9 +15,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 
+import nl.isaac.dotcms.minify.compressor.CssCompressor;
 import nl.isaac.dotcms.minify.exception.DotCMSFileNotFoundException;
 import nl.isaac.dotcms.minify.shared.FileTools;
 import nl.isaac.dotcms.minify.shared.HostTools;
@@ -36,18 +38,17 @@ import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.SourceFile;
-import com.yahoo.platform.yui.compressor.CssCompressor;
 
 /**
- * The Singleton that handles the cache of the minified files. 
- * 
+ * The Singleton that handles the cache of the minified files.
+ *
  * @author Koen Peters, ISAAC
  * @author Xander Steinmann, ISAAC
  */
 public enum MinifyCacheHandler {
 
-	/* 
-	 * The single instance, making this class a singleton 
+	/*
+	 * The single instance, making this class a singleton
 	 */
 	INSTANCE;
 
@@ -72,13 +73,13 @@ public enum MinifyCacheHandler {
 		try {
 			o = cache.get(key.toString(), CACHE_GROUP_NAME);
 		} catch (DotCacheException e) {
-			Logger.info(this.getClass(), String.format("DotCacheException for Group '%s', key '%s', message: %s", CACHE_GROUP_NAME, key.toString(), e.getMessage()));
+			Logger.error(this.getClass(), String.format("DotCacheException for Group '%s', key '%s', message: %s", CACHE_GROUP_NAME, key.toString(), e.getMessage()), e);
 		}
 
 		// If the cache did not have the item we look it up and add it to the cache
 		// And in the case the cache contains values of a previous version of the Minifier plugin,
 		// then the type of those values will not be compatible with our current types
-		if(o == null && !(o instanceof MinifyCacheFile)) {
+		if(o == null || !(o instanceof MinifyCacheFile)) {
 			MinifyCacheFile minifyCacheFile = loadFile(key);
 			put(key, minifyCacheFile);
 			return minifyCacheFile;
@@ -90,7 +91,7 @@ public enum MinifyCacheHandler {
 	/**
 	 * Stores the given MinifyCacheFile in the cache under the given
 	 * MinifyCacheKey. Overwrites the old values if they already existed.
-	 * 
+	 *
 	 * @param key
 	 *            A non null MinifyCacheKey
 	 * @param value
@@ -106,7 +107,7 @@ public enum MinifyCacheHandler {
 
 	/**
 	 * Removes the entry with the given MinifyCacheKey if it exists.
-	 * 
+	 *
 	 * @param key
 	 *            A non null MinifyCacheKey
 	 */
@@ -126,58 +127,59 @@ public enum MinifyCacheHandler {
 	}
 
 	/*
-	 * Loads the file from disk, tries to minify it, and returns the result as an MinifyCacheFile. 
+	 * Loads the file from disk, tries to minify it, and returns the result as an MinifyCacheFile.
 	 */
 	private MinifyCacheFile loadFile(MinifyCacheKey key) {
 		String result = null;
 		FileAsset file = getFile(key);
 
-		try {
+		try (InputStream input = file.getFileInputStream()) {
 
-			InputStream input = file.getFileInputStream();
-			try {
-				if (file.getFileName().contains(".min") || file.getFileName().equalsIgnoreCase("jquery.js")) {
-					Logger.info(MinifyCacheHandler.class, "Skipping minification of file: " +  key.toString() + ". Filename contains '.min' or is 'jquery.js', so " +
-							"we assume the file is already minified.");
+			if (file.getFileName().contains(".min") || file.getFileName().equalsIgnoreCase("jquery.js")) {
+				Logger.debug(MinifyCacheHandler.class, "Skipping minification of file: " +  key.toString() + ". Filename contains '.min' or is 'jquery.js', so " +
+						"we assume the file is already minified.");
 
-				} else if (file.getExtension().equalsIgnoreCase("css")) {
-					Logger.info(MinifyCacheHandler.class, "Compressing css file: " + key.toString());
+			} else if (file.getExtension().equalsIgnoreCase("css")) {
+				try (
 					Reader reader = new InputStreamReader(input);
-					CssCompressor cssCompressor = new CssCompressor(reader);
 					StringWriter writer = new StringWriter();
+				) {
+					Logger.info(MinifyCacheHandler.class, "Compressing css file: " + key.toString());
+					CssCompressor cssCompressor = new CssCompressor(reader);
 					cssCompressor.compress(writer, 80);
 					result = writer.getBuffer().toString();
-					reader.close();
-
-				} else if (file.getExtension().equalsIgnoreCase("js")) {
-					Logger.info(MinifyCacheHandler.class, "Compressing js file: " + key.toString());
-					Compiler compiler = new Compiler();
-					CompilerOptions options = new CompilerOptions();
-					CompilationLevel.WHITESPACE_ONLY.setOptionsForCompilationLevel(options);
-
-					List<SourceFile> jsFiles = new LinkedList<SourceFile>();
-					jsFiles.add(SourceFile.fromInputStream(file.getFileName(), input));
-					List<SourceFile> externalJsfiles = new LinkedList<SourceFile>();
-					compiler.compile(externalJsfiles, jsFiles, options);
-					result = compiler.toSource();
-
-				} else {
-					throw new RuntimeException("Uncompressable file extension: " + file.getExtension());
 				}
-			} catch (IOException e) {
-				Logger.warn(MinifyCacheHandler.class, "Can't compress file " + key.toString());
-			} finally {
-				input.close();
+
+			} else if (file.getExtension().equalsIgnoreCase("js")) {
+				Logger.info(MinifyCacheHandler.class, "Compressing js file: " + key.toString());
+				Compiler compiler = new Compiler();
+				CompilerOptions options = new CompilerOptions();
+				CompilationLevel.WHITESPACE_ONLY.setOptionsForCompilationLevel(options);
+
+				List<SourceFile> jsFiles = new LinkedList<SourceFile>();
+				jsFiles.add(SourceFile.fromInputStream(file.getFileName(), input, StandardCharsets.UTF_8));
+				List<SourceFile> externalJsfiles = new LinkedList<SourceFile>();
+				compiler.compile(externalJsfiles, jsFiles, options);
+				result = compiler.toSource();
+
+			} else {
+				throw new RuntimeException("Uncompressable file extension: " + file.getExtension());
 			}
-		} catch (IOException e) { 
-			Logger.warn(MinifyCacheHandler.class, "Can't compress file, problem with input stream: " + key.toString());
+		} catch (IOException e) {
+			Logger.warn(MinifyCacheHandler.class, "Can't compress file " + key.toString());
 		}
 
 		// If there's no result, get the non-minified data
 		if (result == null || result.trim().isEmpty()) {
-			Logger.info(MinifyCacheHandler.class, "Nothing was minified, so using raw file: " + key.toString());
+			Logger.debug(MinifyCacheHandler.class, "Nothing was minified, so using raw file: " + key.toString());
 			try {
-				result = new String(IOUtils.toByteArray(file.getFileInputStream()), "UTF-8");
+				InputStream is = file.getFileInputStream();
+				try {
+					byte[] byteArray = IOUtils.toByteArray(is);
+					result = new String(byteArray, "UTF-8");
+				} finally {
+					is.close();
+				}
 			} catch (Throwable t) {
 				throw new RuntimeException("Can't store file in cache: " + key.toString(), t);
 			}

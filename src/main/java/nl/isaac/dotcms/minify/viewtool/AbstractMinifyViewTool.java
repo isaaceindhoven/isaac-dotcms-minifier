@@ -1,12 +1,12 @@
 package nl.isaac.dotcms.minify.viewtool;
 
 /*
- * Dotcms minifier by ISAAC is licensed under a 
+ * Dotcms minifier by ISAAC is licensed under a
  * Creative Commons Attribution 3.0 Unported License
- * 
+ *
  * - http://creativecommons.org/licenses/by/3.0/
  * - http://www.geekyplugins.com/
- * 
+ *
  * ISAAC Software Solutions B.V. (http://www.isaac.nl)
  */
 
@@ -38,16 +38,16 @@ import com.dotmarketing.util.UtilMethods;
 /**
  * Abstract class that contains the generic functionality for other Minifier
  * Viewtools that extend this class.
- * 
+ *
  * @see <a href="http://www.geekyplugins.nl">www.geekyplugins.nl</a> for more
  *      information on how to use this plugin.
- * 
+ *
  * @author Koen Peters, ISAAC
  * @author Xander Steinmann, ISAAC
  **/
 
 public abstract class AbstractMinifyViewTool {
-	
+
 	// We use a LinkedHashSet because the order in which the elements are added needs to be preserved
 	protected Map<String, LinkedHashSet<FileAsset>> fileMap;
 	protected Map<String, LinkedHashSet<String>> inlineMap;
@@ -55,7 +55,7 @@ public abstract class AbstractMinifyViewTool {
 	protected HttpServletRequest request;
 
 	protected Host currentHost;
-	
+
 	/**
 	 * The extension that should be used in the minify URL indicating the
 	 * different file types. Should be set by the subclass.
@@ -66,11 +66,11 @@ public abstract class AbstractMinifyViewTool {
 	 * True if the request indicated debug mode, false otherwise
 	 */
 	protected boolean isDebugMode;
-	
-	/* True if we're in live mode based on the request, False otherwise. 
+
+	/* True if we're in live mode based on the request, False otherwise.
 	 */
 	private boolean isLiveMode;
-	
+
 	/** A String that is used as part of the minify URL path so that the
 	 * framework can recognize which requests are meant for the minification
 	 * Servlet and which are not. It is also configured in the web.xml as the
@@ -85,20 +85,20 @@ public abstract class AbstractMinifyViewTool {
 	 */
 	public static final String REWRITE_PATTERN = "minifier_rewrite_";
 
-	
+
 	// /////////////////
 	// PUBLIC METHODS //
 	// /////////////////
 
 	/**
-	 * 
+	 *
 	 * @param filesOrGroups
 	 *            A comma separated list of relative file uris or groups. Each
 	 *            of the files should be retrievable by
 	 *            {@link nl.isaac.dotcms.minify.shared.FileTools#getFileAssetByURI(String, Host, boolean)}
 	 *            and the groups must have been created by calling
 	 *            {@link #addFiles(String, String, Host)}.
-	 * 
+	 *
 	 * @param domain
 	 *            (Optional) The domain that should be used as the domain for
 	 *            the minifier URL. If no domain is provided the URL will be
@@ -110,35 +110,35 @@ public abstract class AbstractMinifyViewTool {
 	 *            hosts of this dotCMS instance.). Setting this parameter is
 	 *            useful for things like using CDNs to host your content. Use
 	 *            null or "" to skip this parameter.
-	 * 
+	 *
 	 * @param host
 	 *            (Optional) The dotCMS host that will be used to retrieve the
 	 *            files in fileOrGroups. This host will not be used for the
 	 *            files in the groups because they have been added with their
 	 *            own host. If no host is provided the current host is used. Use
 	 *            null to skip this parameter.
-	 * 
+	 *
 	 * @return <p>
 	 *         The URL that can be called by the browser that will return a
 	 *         minified and combined version of the content of the files (and
 	 *         the files in the groups) in "filesOrGroups".
-	 * 
+	 *
 	 *         <p>
 	 *         The URL that is returned consists out of these parts:
-	 * 
+	 *
 	 *         <pre>
 	 * {@code
 	 * [domain]/[path]/[cache buster][FILTER_PATTERN][extension]?uris=[uris][debug mode]
 	 * }
 	 * </pre>
-	 * 
+	 *
 	 *         <ol>
 	 *         <li>[domain]<br>
 	 *         If the parameter "domain" is provided, [domain] will be
 	 *         constructed as a protocol relative domain:
 	 *         "//[the value of the provided domain]". If not, the [domain] part
 	 *         will be "/" making the URL relative to the root of the website.
-	 * 
+	 *
 	 *         <li>[path]<br>
 	 *         The path will be constructed by taking the path of the first file
 	 *         in "filesOrGroups" and stripping away the file part. This means
@@ -147,7 +147,7 @@ public abstract class AbstractMinifyViewTool {
 	 *         content of those files are relative to that same path. For
 	 *         instance all references to background images in CSS files must be
 	 *         relative to the same path, or else they won't be found.
-	 * 
+	 *
 	 *         <li>[cache buster]<br>
 	 *         This is the result of an Adler32 checksum of all the modification
 	 *         dates of all the files included in filesOrGroups. If one of the
@@ -155,22 +155,22 @@ public abstract class AbstractMinifyViewTool {
 	 *         change, resulting in a different URL, forcing the browser to
 	 *         reload. We do not use a http query parameter for this because
 	 *         some proxies don't included them in their cache key.
-	 * 
+	 *
 	 *         <li>[FILTER_PATTERN]<br>
 	 *         The value of "FILTER_PATTERN" as defined in this class. It is
 	 *         used by the Minify filter to recognize which requests the Minify
 	 *         frameworks needs to handle. So never use this pattern in any of
 	 *         your own .css or .js files because the minifier will handle it as
 	 *         a minifier servlet
-	 * 
+	 *
 	 *         <li>[extension]<br>
 	 *         The extension of the type of files that are being minified, e.g.
 	 *         css or js.
-	 * 
+	 *
 	 *         <li>[uris]<br>
 	 *         The list of all files in "filesOrGroups"separated by commas. The
 	 *         groups are of course translated to the files that contains them.
-	 * 
+	 *
 	 *         <li>[debug mode]<br>
 	 *         If in debug mode [debug mode] will be "&debug=true", otherwise it
 	 *         is empty. Requesting the URL the server will respond with the
@@ -187,7 +187,7 @@ public abstract class AbstractMinifyViewTool {
 		Set<FileAsset> fileAssets = getFileUriSet(filesOrGroups, cleanHost);
 
 		if (fileAssets.isEmpty()) {
-			Logger.warn(this, "no files for " + filesOrGroups);
+			Logger.debug(this, "no files for " + filesOrGroups);
 			return "";
 		}
 
@@ -221,7 +221,7 @@ public abstract class AbstractMinifyViewTool {
 	public String toUrl(String filesOrGroups, Host host) {
 		return toUrl(filesOrGroups, null, host);
 	}
-	
+
 	/**
 	 * Removes all files and inline code that have been added so far.
 	 */
@@ -231,35 +231,35 @@ public abstract class AbstractMinifyViewTool {
 	}
 
 	/**
-	 * Adds the given uris to the given group using the given dotCMS host as the host the uris should be looked up 
-	 * 
+	 * Adds the given uris to the given group using the given dotCMS host as the host the uris should be looked up
+	 *
 	 * @param fileUris
 	 *            The fileUris to add, separated by a comma. For instance:
 	 *            "/path/to/file.js,/path/to/another/file.js".
-	 * 
+	 *
 	 * @param group
 	 *            The group to add the file to.
-	 *            
+	 *
 	 * @param host
 	 *            (Optional) The dotCMS host that will be used to retrieve the
 	 *            filesUris. If no host is provided the current host is used. Use
 	 *            null to skip this parameter.
-	 *            
+	 *
 	 */
 	public void addFiles(String fileUris, String group, Host host) {
 		ParamValidationUtil.validateParamNotNull(fileUris, "fileUris");
 		ParamValidationUtil.validateParamNotNull(group, "group");
-		
+
 		Host cleanHost = UtilMethods.isSet(host) ? host : HostTools.getCurrentHost(request);
-		
+
 		for (String fileUri : StringListUtil.getCleanStringList(fileUris)) {
 			FileAsset fileAsset = FileTools.getFileAssetByURI(fileUri, cleanHost, isLiveMode);
-			
+
 			if (fileAsset != null) {
 				if (!fileMap.containsKey(group)) {
 					fileMap.put(group, new LinkedHashSet<FileAsset>());
 				}
-	
+
 				fileMap.get(group).add(fileAsset);
 			}
 		}
@@ -271,21 +271,21 @@ public abstract class AbstractMinifyViewTool {
 	 * domain defaulted to null.
 	 */
 	public void addFiles(String fileUris, String group) {
-		addFiles(fileUris, group, null);		
+		addFiles(fileUris, group, null);
 	}
 
 	/**
 	 * @param groups
 	 *            The groups to get the files from separated by commas.
-	 * 
+	 *
 	 * @return Set of FileAsset objects that were added to any of the given
 	 *         groups.
 	 */
 	public Set<FileAsset> getFiles(String groups) {
 		ParamValidationUtil.validateParamNotNull(groups, "groups");
-		
+
 		List<String> cleangroups = StringListUtil.getCleanStringList(groups);
-		
+
 		Set<FileAsset> result = new LinkedHashSet<FileAsset>();
 		for (String group : cleangroups) {
 			if (fileMap.containsKey(group)) {
@@ -307,10 +307,10 @@ public abstract class AbstractMinifyViewTool {
 
 	/**
 	 * Adds inline code to the given group.
-	 * 
+	 *
 	 * @param inlineCode
 	 *            The inline code to add.
-	 * 
+	 *
 	 * @param group
 	 *            The group to add the inline code to.
 	 */
@@ -328,24 +328,24 @@ public abstract class AbstractMinifyViewTool {
 	/**
 	 * @param groups
 	 *            The groups to get the inline code from, separated by commas.
-	 * 
+	 *
 	 * @return A Set of all inline code that was added to the given group.
 	 */
 	public Set<String> getInlines(String groups) {
 		ParamValidationUtil.validateParamNotNull(groups, "groups");
 
 		List<String> cleangroups = StringListUtil.getCleanStringList(groups);
-		
+
 		Set<String> result = new LinkedHashSet<String>();
 		for (String group : cleangroups) {
-			
+
 			if (inlineMap.containsKey(group)) {
 				result.addAll(inlineMap.get(group));
 			} else {
-				Logger.debug(AbstractMinifyViewTool.class, "Can't find group '" + group + "'");			
+				Logger.debug(AbstractMinifyViewTool.class, "Can't find group '" + group + "'");
 			}
 		}
-		
+
 		return result;
 	}
 
@@ -356,7 +356,7 @@ public abstract class AbstractMinifyViewTool {
 		return inlineMap.keySet();
 
 	}
-	
+
 	/**
 	 * @param hostNameOrAlias
 	 *            The name or the alias of one of the hosts on this dotCMS
@@ -375,7 +375,7 @@ public abstract class AbstractMinifyViewTool {
 	/**
 	 * Initialization method meant to be called by the init methods of the
 	 * viewtools that extend this abstract class.
-	 * 
+	 *
 	 * @param initData
 	 *            The initData object that is given as a parameter to the init
 	 *            method of the extending viewtools that call this method.
@@ -399,11 +399,11 @@ public abstract class AbstractMinifyViewTool {
 	 * @param fileAssets
 	 *            A non empty Set containing FileAssets that we want to include
 	 *            in the minify URL.
-	 * 
+	 *
 	 * @param domain
 	 *            The domain that should be used as the domain for the URL. If
 	 *            it is an empty string the URL will be made relative.
-	 * 
+	 *
 	 * @return The URL that can be called by the browser that will return a
 	 *         minified and combined version of the content of the files in
 	 *         "fileUris". If a domain is given it will be used to make the URL
@@ -433,12 +433,12 @@ public abstract class AbstractMinifyViewTool {
 	 *            {@link nl.isaac.dotcms.minify.shared.FileTools#getFileAssetByURI(String, Host, boolean)}
 	 *            and the groups must have been created by calling
 	 *            {@link #addFiles(String, String, Host)}.
-	 * 
+	 *
 	 * @param host
 	 *            The host that will be used to retrieve the files in
 	 *            fileOrGroups. This host will not be used for the files in the
 	 *            groups because they have been added with their own host.
-	 * 
+	 *
 	 * @return A Set containing all FileAsset objects in the given
 	 *         "fileUrisAndGroups". All groups are exploded to the FilesAsset
 	 *         objects they contain.
@@ -461,10 +461,10 @@ public abstract class AbstractMinifyViewTool {
 					if (file != null) {
 						fileUriList.add(file);
 					}
-					
+
 				} else {
-					// It's not a group, but also not a recognized file. 
-					Logger.warn(this, "FileUri " + fileUriOrGroup
+					// It's not a group, but also not a recognized file.
+					Logger.debug(this, "FileUri " + fileUriOrGroup
 							+ " does not have expected extension "
 							+ minifyUrlExtension);
 				}
@@ -477,7 +477,7 @@ public abstract class AbstractMinifyViewTool {
 	/**
 	 * @param fileAsset
 	 *            A non null FileAsset
-	 * 
+	 *
 	 * @return The URI of the FileAsset object with a cachebuster added to the
 	 *         filename. This cachebuster will be removed by a rewrite rule also
 	 *         included in the Minifier framework so it will not result in a 404
@@ -487,14 +487,14 @@ public abstract class AbstractMinifyViewTool {
 
 		Collection<FileAsset> asList = Collections.singleton(fileAsset);
 
-		// Check of this fileAsset is located on a different host. If so: use that domain to fetch it. 
+		// Check of this fileAsset is located on a different host. If so: use that domain to fetch it.
 		String hostName = "";
 		if (!fileAsset.getHost().equals(currentHost.getIdentifier())) {
 			Host host = HostTools.getHostByIdentifier(fileAsset.getHost());
 			hostName = "//" + host.getHostname();
 		}
-		
-		return hostName + fileAsset.getPath() + fileAsset.getFileName() + "?_=" + createCacheBuster(asList); 
+
+		return hostName + fileAsset.getPath() + fileAsset.getFileName() + "?_=" + createCacheBuster(asList);
 	}
 
 	// //////////////////
@@ -502,7 +502,7 @@ public abstract class AbstractMinifyViewTool {
 	// //////////////////
 
 	/**
-	 * 
+	 *
 	 * @param fileAssets
 	 *            A Set containing string representing paths to files on the
 	 *            given host, eg. "/path/to/file.css". No groups are allowed
@@ -531,12 +531,12 @@ public abstract class AbstractMinifyViewTool {
 		adler.update(bytes);
 		return "" + adler.getValue();
 	}
-	
+
 	/**
 	 * @param fileUri
 	 *            The representation of the path and filename in a string, eg:
 	 *            "path/to/file.js"
-	 *            
+	 *
 	 * @return the extension of the file represented in the string, eg "js".
 	 */
 	private String getFileExtension(String fileUri) {
@@ -551,16 +551,16 @@ public abstract class AbstractMinifyViewTool {
 	 * @param fileAssets
 	 *            A Set of non null FileAsset objects that will be included in
 	 *            the string
-	 *            
+	 *
 	 * @return A string containing relative paths to all the files in the given
 	 *         set separated by commas
 	 */
 	private String fileAssetsToCsvUris(Set<FileAsset> fileAssets) {
 		StringBuilder sb = new StringBuilder();
-		
+
 		for (FileAsset fileAsset : fileAssets) {
-			
-			// Check of this fileAsset is located on a different host. If so: use that domain to fetch it. 
+
+			// Check of this fileAsset is located on a different host. If so: use that domain to fetch it.
 			String hostName = "";
 			if (!fileAsset.getHost().equals(currentHost.getIdentifier())) {
 				Host host = HostTools.getHostByIdentifier(fileAsset.getHost());
@@ -568,7 +568,7 @@ public abstract class AbstractMinifyViewTool {
 			}
 			sb.append(sb.length() > 0? ",": "").append(hostName).append(fileAsset.getPath()).append(fileAsset.getFileName());
 		}
-		
+
 		try {
 			return URLEncoder.encode(sb.toString(), "UTF-8");
 		} catch (UnsupportedEncodingException e) {

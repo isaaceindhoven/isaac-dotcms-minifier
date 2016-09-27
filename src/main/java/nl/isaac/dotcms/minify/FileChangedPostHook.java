@@ -1,12 +1,12 @@
 package nl.isaac.dotcms.minify;
 
 /*
- * Dotcms minifier by ISAAC is licensed under a 
+ * Dotcms minifier by ISAAC is licensed under a
  * Creative Commons Attribution 3.0 Unported License
- * 
+ *
  * - http://creativecommons.org/licenses/by/3.0/
  * - http://www.geekyplugins.com/
- * 
+ *
  * ISAAC Software Solutions B.V. (http://www.isaac.nl)
  */
 
@@ -92,13 +92,13 @@ public class FileChangedPostHook extends ContentletAPIPostHookAbstractImp {
 
 	private void handleContentlet(Contentlet contentlet) {
 		Boolean isFileAsset = APILocator.getFileAssetAPI().isFileAsset(contentlet);
-		
-		Logger.info(this, "handleContentlet = " + contentlet.getTitle());
-		Logger.info(this, "File isFileAsset = " + isFileAsset);
-		
+
+		Logger.debug(this, "handleContentlet = " + contentlet.getTitle());
+		Logger.debug(this, "File isFileAsset = " + isFileAsset);
+
 		if (isFileAsset) {
 			FileAsset file = APILocator.getFileAssetAPI().fromContentlet(contentlet);
-			
+
 			try {
 
 				if (contentlet.getTitle().endsWith("css") || contentlet.getTitle().endsWith("js")) {
@@ -109,7 +109,7 @@ public class FileChangedPostHook extends ContentletAPIPostHookAbstractImp {
 					MinifyCacheHandler.INSTANCE.remove(keyEditPreview);
 					MinifyCacheHandler.INSTANCE.remove(keyLive);
 
-					Logger.info(this, "File '" + file.getFileName() + "' (uri: " + file.getURI() + ") has changed, cache has been flushed.");
+					Logger.debug(this, "File '" + file.getFileName() + "' (uri: " + file.getURI() + ") has changed, cache has been flushed.");
 				}
 			} catch (DotDataException ex) {
 				throw new RuntimeException(ex);
@@ -127,18 +127,18 @@ public class FileChangedPostHook extends ContentletAPIPostHookAbstractImp {
 			Identifier identifier = APILocator.getIdentifierAPI().findFromInode(file.getIdentifier());
 			return APILocator.getHostAPI().find(identifier.getHostId(), APILocator.getUserAPI().getSystemUser(), false);
 		} catch (DotSecurityException e) {
-			Logger.info(this.getClass(), "DotSecurityException while getting Host");
+			Logger.error(this.getClass(), "DotSecurityException while getting Host", e);
 			throw new RuntimeException(e);
 		} catch (DotDataException e) {
-			Logger.info(this.getClass(), "DotSecurityException while getting Host");
+			Logger.error(this.getClass(), "DotSecurityException while getting Host", e);
 			throw new RuntimeException(e);
 		}
 	}
 
 	/**
-	 ******************************************************************************* 
+	 *******************************************************************************
 	 * Dummy implemented methods *
-	 ******************************************************************************* 
+	 *******************************************************************************
 	 */
 	@Override
 	public void copyContentlet(Contentlet arg0, Folder arg1, User arg2,
