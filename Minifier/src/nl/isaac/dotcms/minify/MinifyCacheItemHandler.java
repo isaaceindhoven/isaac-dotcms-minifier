@@ -117,7 +117,7 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 		}
 		
 		//If there's no result, get the non-minified data
-		if (result == null) {
+		if (result == null || result.trim().isEmpty()) {
 			Logger.info(MinifyCacheItemHandler.class, "Storing raw file: " + minifyCacheKey.getReadableString());
 			try {
 				result = new String(FileFactory.getFileData(file), "UTF-8");
@@ -143,10 +143,14 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 			for(Host host: hosts) {
 				List<File> files = APILocator.getFileAPI().getAllHostFiles(host, live, APILocator.getUserAPI().getSystemUser(), false);
 				for(File file: files) {
-					if((file.getExtension().equalsIgnoreCase("css") || file.getExtension().equalsIgnoreCase("js"))) {
-						MinifyCacheFileKey fileKey = new MinifyCacheFileKey(file.getURI(), live, host);
-						MinifyCacheFile minifyCacheFile = get(fileKey, host);
-						cache.put(fileKey.getKey(), minifyCacheFile);
+					if(file.getPath() != null && file.getPath().length() > 0) {
+						if((file.getExtension().equalsIgnoreCase("css") || file.getExtension().equalsIgnoreCase("js"))) {
+							MinifyCacheFileKey fileKey = new MinifyCacheFileKey(file.getURI(), live, host);
+							MinifyCacheFile minifyCacheFile = get(fileKey, host);
+							cache.put(fileKey.getKey(), minifyCacheFile);
+						}
+					} else {
+						Logger.warn(this.getClass(), "Found corrupt file with path " + file.getPath() + ": " + file.getFileName() + " " + file.getInode());
 					}
 				}
 			}

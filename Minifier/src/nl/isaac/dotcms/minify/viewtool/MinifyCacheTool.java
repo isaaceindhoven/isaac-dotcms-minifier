@@ -23,7 +23,7 @@ public class MinifyCacheTool implements ViewTool {
 	
 	@Override
 	public void init(Object arg0) {
-		MinifyCacheHandler.getInstance().fillInitialCache();
+		//MinifyCacheHandler.getInstance().fillInitialCache();
 	}
 	
 	public void updateCache() {

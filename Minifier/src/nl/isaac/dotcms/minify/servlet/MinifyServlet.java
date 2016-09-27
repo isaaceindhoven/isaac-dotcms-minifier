@@ -58,7 +58,7 @@ public class MinifyServlet extends HttpServlet {
 		if(uris.size() < 1) {
 			throw new RuntimeException("Missing uri's");
 		} else {
-			String firstUri = uris.iterator().next().toLowerCase();
+			String firstUri = uris.iterator().next().toLowerCase().trim();
 			if(firstUri.endsWith(".css")) {
 				response.setContentType("text/css;charset=UTF-8");
 			} else if (firstUri.endsWith(".js")){
@@ -72,7 +72,7 @@ public class MinifyServlet extends HttpServlet {
 		Boolean live = isLive(request);
 		
 		for(String uri: uris) {
-			String modifiedUri = uri;
+			String modifiedUri = uri.trim();
 			Host host = currentHost;
 			
 			//check if this file needs to be retrieved from a different host 
@@ -91,7 +91,7 @@ public class MinifyServlet extends HttpServlet {
 						Logger.warn(this.getClass(), "Can't find host: '" + hostName + "'");
 					}
 				} else {
-					Logger.warn(this.getClass(), "Bad uri: " + uri);
+					Logger.warn(this.getClass(), "Bad uri: '" + uri + "'");
 				}
 			}
 			
