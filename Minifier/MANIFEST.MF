@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-Deploy-Class: 
-Plugin-Name: Minifier Plugin
-Plugin-Version: 4.0
-Author: ISAAC
-
