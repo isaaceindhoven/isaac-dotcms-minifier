@@ -1,0 +1,47 @@
+#macro(minifyCss $files $extra)
+  #if($UtilMethods.isSet($files))
+    #set($debugMode = $request.getParameter("debug"))
+    #if($UtilMethods.isSet($debugMode))
+      #foreach($file in $files.split(","))
+        <link rel="stylesheet" type="text/css" href="${file}" $!extra/>
+      #end
+    #else
+      #set($uriList = $files.split(","))
+      #set($firstUri = $uriList.get(0))
+      #set($firstPath = '/')
+      #set($slashIndex = $firstUri.lastIndexOf('/') + 1)
+      #if($slashIndex > 0)
+        #set($firstPath = $firstUri.substring(0, $slashIndex))
+      #end
+      #if($EDIT_MODE || $PREVIEW_MODE)
+        <link rel="stylesheet" type="text/css" href="$!{firstPath}minifier.css?uris=${files}&live=false" $!extra/>
+      #else
+        <link rel="stylesheet" type="text/css" href="$!{firstPath}minifier.css?uris=${files}" $!extra/>
+      #end
+    #end
+  #end  
+#end
+
+#macro(minifyJs $files)
+  #if($UtilMethods.isSet($files))
+    #set($debugMode = $request.getParameter("debug"))
+    #if($UtilMethods.isSet($debugMode))
+      #foreach($file in $files.split(","))
+        <script type="text/javascript" src="${file}"></script>
+      #end
+    #else
+      #set($uriList = $files.split(","))
+      #set($firstUri = $uriList.get(0))
+      #set($firstPath = '/')
+      #set($slashIndex = $firstUri.lastIndexOf('/') + 1)
+      #if($slashIndex > 0)
+        #set($firstPath = $firstUri.substring(0, $slashIndex))
+      #end
+      #if($EDIT_MODE || $PREVIEW_MODE)
+        <script type="text/javascript" src="$!{firstPath}minifier.js?uris=${files}&live=false"></script>
+      #else
+        <script type="text/javascript" src="$!{firstPath}minifier.js?uris=${files}"></script>
+      #end
+    #end
+  #end  
+#end

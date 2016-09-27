@@ -1,0 +1,5 @@
+	<tool>
+		<key>minifyCache</key>
+		<scope>application</scope>
+		<class>nl.isaac.dotcms.minify.viewtool.MinifyCacheTool</class>
+	</tool>	
