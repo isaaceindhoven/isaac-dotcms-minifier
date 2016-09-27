@@ -11,12 +11,11 @@ import nl.isaac.dotcms.minify.viewtool.JsMinifyViewTool;
 import nl.isaac.dotcms.util.osgi.ExtendedGenericBundleActivator;
 import nl.isaac.dotcms.util.osgi.ViewToolScope;
 
-import org.apache.felix.http.api.ExtHttpService;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.NamespaceException;
-import org.osgi.util.tracker.ServiceTracker;
-
+import com.dotcms.repackage.org.apache.felix.http.api.ExtHttpService;
+import com.dotcms.repackage.org.osgi.framework.BundleContext;
+import com.dotcms.repackage.org.osgi.framework.ServiceReference;
+import com.dotcms.repackage.org.osgi.service.http.NamespaceException;
+import com.dotcms.repackage.org.osgi.util.tracker.ServiceTracker;
 import com.dotmarketing.filters.CMSFilter;
 import com.dotmarketing.util.Logger;
 
@@ -48,8 +47,8 @@ public class MinifierActivator extends ExtendedGenericBundleActivator {
 		CMSFilter.addExclude("/app/servlets/MinifyServlet");
 		CMSFilter.addExclude("/app/servlets/MinifyServlet");
 		CMSFilter.addExclude( filterPattern);
-
 	}
+	
 
 	/**
 	 * Mostly boilerplate to get the httpservice where we can register the {@link #minifyServlet}, we also create the servlet here.

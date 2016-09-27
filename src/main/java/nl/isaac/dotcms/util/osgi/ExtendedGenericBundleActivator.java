@@ -2,9 +2,10 @@ package nl.isaac.dotcms.util.osgi;
 
 
 import org.apache.velocity.tools.view.context.ViewContext;
-import org.osgi.framework.BundleContext;
 
+import com.dotcms.repackage.org.osgi.framework.BundleContext;
 import com.dotmarketing.osgi.GenericBundleActivator;
+
 
 /**
  * Provides a convenience method for adding viewtools.
@@ -16,7 +17,6 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 	@Override
 	protected void initializeServices(BundleContext context) throws Exception {
 		super.initializeServices(context);
-		
 	}
 
 	protected void addViewTool(BundleContext context, Class<?> viewtoolClass, String key, ViewToolScope scope) {
