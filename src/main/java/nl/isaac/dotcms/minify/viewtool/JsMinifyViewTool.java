@@ -18,6 +18,9 @@ import com.dotmarketing.beans.Host;
 import com.dotmarketing.portlets.fileassets.business.FileAsset;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
+import com.google.javascript.jscomp.CompilationLevel;
+
+import nl.isaac.dotcms.minify.api.MinifierAPI;
 
 /**
  * Viewtool that provides functionality to minify and combine JS files.
@@ -179,5 +182,68 @@ public final class JsMinifyViewTool extends AbstractMinifyViewTool implements Vi
 	 */
 	public String toScriptTag(String filesOrGroups, Host host) {
 		return toScriptTag(filesOrGroups, null, host, null);
+	}
+
+	public String testWhitespaceJsMinifier() {
+		MinifierAPI minAPI = new MinifierAPI();
+		
+		String whiteSpaceMinifiedJs1 = minAPI.getMinifiedJavascript(getJs1(), CompilationLevel.WHITESPACE_ONLY);
+		String whiteSpaceMinifiedJs2 = minAPI.getMinifiedJavascript(getJs2(), CompilationLevel.WHITESPACE_ONLY);
+		String actualWhiteSpaceMinifiedJs = whiteSpaceMinifiedJs1 + whiteSpaceMinifiedJs2; 
+		String expectedWhiteSpaceMinifiedJs = "var unusedVar;function helloWorld(){alert(\"Hello World!\")}helloWorld();function append(string,append){console.log(string+append)};";
+		
+		if (actualWhiteSpaceMinifiedJs.equals(expectedWhiteSpaceMinifiedJs)) {
+			return actualWhiteSpaceMinifiedJs;
+		}
+		
+		return null;
+	}
+	
+	public String testSimpleJsMinifier() {
+		MinifierAPI minAPI = new MinifierAPI();
+		
+		String simpleMinifiedJs1 = minAPI.getMinifiedJavascript(getJs1(), CompilationLevel.SIMPLE_OPTIMIZATIONS);
+		String simpleMinifiedJs2 = minAPI.getMinifiedJavascript(getJs2(), CompilationLevel.SIMPLE_OPTIMIZATIONS);
+		String actualSimpleMinifiedJs = simpleMinifiedJs1 + simpleMinifiedJs2; 
+		String expectedSimpleMinifiedJs = "var unusedVar;function helloWorld(){alert(\"Hello World!\")}helloWorld();function append(a,b){console.log(a+b)};";
+		
+		if (actualSimpleMinifiedJs.equals(expectedSimpleMinifiedJs)) {
+			return actualSimpleMinifiedJs;
+		}
+		
+		return null;
+	}
+	
+	public String testAdvancedJsMinifier() {
+		MinifierAPI minAPI = new MinifierAPI();
+
+		String advancedMinifiedJs1 = minAPI.getMinifiedJavascript(getJs1(), CompilationLevel.ADVANCED_OPTIMIZATIONS);
+		String advancedMinifiedJs2 = minAPI.getMinifiedJavascript(getJs2(), CompilationLevel.ADVANCED_OPTIMIZATIONS);
+		String actualAdvancedMinifiedJs = advancedMinifiedJs1 + advancedMinifiedJs2; 
+		String expectedAdvancedMinifiedJs = "alert(\"Hello World!\");";
+		
+		if (actualAdvancedMinifiedJs.equals(expectedAdvancedMinifiedJs)) {
+			return actualAdvancedMinifiedJs;
+		}
+		
+		return null;
+	}
+	
+	private String getJs1() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("var unusedVar;");
+		sb.append("\nfunction helloWorld() {");
+		sb.append("\n\talert('Hello World!');");
+		sb.append("\n}");
+		sb.append("\n\n\thelloWorld();");
+		return sb.toString();
+	}
+	
+	private String getJs2() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("function append(string, append) {");
+		sb.append("\n\tconsole.log(string + append);");
+		sb.append("\n}");
+		return sb.toString();
 	}
 }

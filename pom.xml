@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nl.isaac.dotcms.plugin.minifier</groupId>
 	<artifactId>isaac-dotcms-minifier</artifactId>
-	<version>3.2.2</version>
+	<version>3.5</version>
 	<packaging>bundle</packaging>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -77,7 +77,7 @@
 		<dependency>
 			<groupId>com.dotcms</groupId>
 			<artifactId>dotcms</artifactId>
-			<version>3.2</version>
+			<version>3.5</version>
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
@@ -133,6 +133,29 @@
 			<artifactId>servlet-api</artifactId>
 			<version>2.5</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.dotcms.lib</groupId>
+			<artifactId>dot.log4j-api</artifactId>
+			<version>2.3_1</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.dotcms.lib</groupId>
+			<artifactId>dot.log4j-core</artifactId>
+			<version>2.3_1</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<version>3.1.0.RELEASE</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-logging</artifactId>
+					<groupId>commons-logging</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 </project>

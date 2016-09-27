@@ -19,6 +19,8 @@ import com.dotmarketing.portlets.fileassets.business.FileAsset;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
 
+import nl.isaac.dotcms.minify.api.MinifierAPI;
+
 /**
  * Viewtool that provides functionality to minify and combine CSS files. 
  * 
@@ -153,4 +155,32 @@ public final class CssMinifyViewTool extends AbstractMinifyViewTool implements V
 	public String toLinkTag(String filesOrGroups, Host host) {
 		return toLinkTag(filesOrGroups, null, host, null);
 	}
+	
+	/**
+	 * Test the CSS Minifier API
+	 * @return true if success false otherwise
+	 */
+	public boolean testCssMinifier() {
+		StringBuilder sbCss1 = new StringBuilder();
+		sbCss1.append("body {");
+		sbCss1.append("\n\tbackground-color: black;");
+		sbCss1.append("\n\tfont-size: Arial;");
+		sbCss1.append("\n}");
+		
+		StringBuilder sbCss2 = new StringBuilder();
+		sbCss2.append("div {");
+		sbCss2.append("\n\tcolor: red;");
+		sbCss2.append("\n\tpadding: 10px;");
+		sbCss2.append("\n}");
+		
+		MinifierAPI minAPI = new MinifierAPI();
+		String minifiedCss1 = minAPI.getMinfiedCss(sbCss1.toString());
+		String minifiedCss2 = minAPI.getMinfiedCss(sbCss2.toString());
+		String actualMinifiedCss = minifiedCss1 + minifiedCss2; 
+				
+		String expectedMinifiedCssResult = "body{background-color:black;font-size:Arial}div{color:red;padding:10px}";
+		
+		return actualMinifiedCss.equals(expectedMinifiedCssResult);
+	}
+	
 }
