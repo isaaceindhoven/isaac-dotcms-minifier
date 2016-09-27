@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_dependency_libs" name="Create Jar for Project Minify plugin">
+    <target name="create_dependency_libs">
+        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpath="jarjar-1.0.jar"/>
+        <jarjar destfile="../lib/yuicompressor_dependency.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <zipfileset excludes="META-INF/*.SF" src="yuicompressor-2.4.4.jar"/>
+            <rule pattern="com.**" result="nl.isaac.dotcms.minify.dependencies.@0" />
+            <rule pattern="javax.**" result="nl.isaac.dotcms.minify.dependencies.@0" />
+            <rule pattern="org.**" result="nl.isaac.dotcms.minify.dependencies.@0" />
+            <rule pattern="rhino_ast.**" result="nl.isaac.dotcms.minify.dependencies.@0" />
+            <rule pattern="jargs.**" result="nl.isaac.dotcms.minify.dependencies.@0" />
+            <rule pattern="org.**" result="nl.isaac.dotcms.minify.dependencies.@0" />
+        </jarjar>
+        <jarjar destfile="../lib/compiler_dependency.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <zipfileset excludes="META-INF/*.SF,*.zip,*.properties" src="compiler.jar"/>
+            <rule pattern="com.**" result="nl.isaac.dotcms.minify.dependencies.@0" />
+            <rule pattern="javax.**" result="nl.isaac.dotcms.minify.dependencies.@0" />
+            <rule pattern="org.**" result="nl.isaac.dotcms.minify.dependencies.@0" />
+            <rule pattern="rhino_ast.**" result="nl.isaac.dotcms.minify.dependencies.@0" />
+            <rule pattern="jargs.**" result="nl.isaac.dotcms.minify.dependencies.@0" />
+            <rule pattern="org.**" result="nl.isaac.dotcms.minify.dependencies.@0" />
+        </jarjar>
+    </target>
+</project>

@@ -12,7 +12,6 @@ import java.util.Calendar;
 import java.util.List;
 
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,12 +20,17 @@ import nl.isaac.dotcms.minify.MinifyCacheFileKey;
 import nl.isaac.dotcms.minify.MinifyCacheHandler;
 
 import com.dotmarketing.beans.Host;
-import com.dotmarketing.factories.HostFactory;
+import com.dotmarketing.business.APILocator;
+import com.dotmarketing.business.web.WebAPILocator;
+import com.dotmarketing.exception.DotDataException;
+import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
+import com.liferay.portal.PortalException;
+import com.liferay.portal.SystemException;
 
 /**
- * Servlet that uses the MinifyCache to retrieve minified CSS and Javascript.
+ * Servlet that uses the MinifyCacheHandler to retrieve minified CSS and Javascript.
  * 
  * @author Xander
  *
@@ -41,68 +45,87 @@ public class MinifyServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		Calendar start = Calendar.getInstance();
 		Host currentHost = getCurrentHost(request);
-		String urisParam = request.getParameter("uris");
 		
-		if(UtilMethods.isSet(request.getParameter("uris"))) {
-			List<String> uris = Arrays.asList(urisParam.split(","));
-			
-			//check uris 
-			if(uris.size() < 1) {
-				throw new RuntimeException("Missing uri's");
+		//validate uris parameter
+		if(!UtilMethods.isSet(request.getParameter("uris"))) {
+			throw new ServletException("Invalid uris parameter");
+		}
+		List<String> uris = Arrays.asList(request.getParameter("uris").split(","));
+
+		//set content type if uri's is a css or js file
+		if(uris.size() < 1) {
+			throw new RuntimeException("Missing uri's");
+		} else {
+			String firstUri = uris.iterator().next().toLowerCase();
+			if(firstUri.endsWith(".css")) {
+				response.setContentType("text/css;charset=UTF-8");
+			} else if (firstUri.endsWith(".js")){
+				response.setContentType("application/javascript;charset=UTF-8");
 			} else {
-				String firstUri = uris.iterator().next().toLowerCase();
-				if(firstUri.endsWith(".css")) {
-					response.setContentType("text/css;charset=UTF-8");
-				} else if (firstUri.endsWith(".js")){
-					response.setContentType("application/javascript;charset=UTF-8");
-				} else {
-					throw new RuntimeException("Expecting only files with the .css or .js extension");
-				}
-			}
-			
-			//retrieve live or working cached files
-			Boolean live = Boolean.TRUE;
-			String liveString = request.getParameter("live");
-			if(liveString != null) {
-				live = Boolean.valueOf(liveString);
-			} else {
-				live = getIsLiveFromRequest(request);
-			}
-			
-			for(String uri: uris) {
-				String modifiedUri = uri;
-				Host host = currentHost;
-				
-				//check if this file needs to be retrieved from a different host 
-				if(modifiedUri.startsWith("http")) {
-					modifiedUri = modifiedUri.replaceAll("http://", "");
-					modifiedUri = modifiedUri.replaceAll("https://", "");
-					int dashIndex = modifiedUri.indexOf('/');
-					if(dashIndex > 0) {
-						String hostName = modifiedUri.substring(0, dashIndex);
-						modifiedUri = modifiedUri.substring(dashIndex);
-						host = HostFactory.getHostByHostName(hostName);
-					} else {
-						Logger.warn(this.getClass(), "Bad uri: " + uri);
-					}
-				}
-				
-				//create a key for this uri and retrieve from the cache
-				String key = new MinifyCacheFileKey(modifiedUri, live, host).getKey();
-				response.getWriter().write(MinifyCacheHandler.getInstance().get(key).getFileData());
+				throw new RuntimeException("Expecting only files with the .css or .js extension");
 			}
 		}
 		
-		Calendar end = Calendar.getInstance();
-		Logger.debug(this.getClass(), "MinifyServlet took " + (end.getTimeInMillis() - start.getTimeInMillis()) + "ms for uris " + urisParam);
+		//check if we need the live or working version
+		Boolean live = isLive(request);
 		
+		for(String uri: uris) {
+			String modifiedUri = uri;
+			Host host = currentHost;
+			
+			//check if this file needs to be retrieved from a different host 
+			if(modifiedUri.startsWith("http")) {
+				modifiedUri = modifiedUri.replaceAll("http://", "");
+				modifiedUri = modifiedUri.replaceAll("https://", "");
+				int dashIndex = modifiedUri.indexOf('/');
+				if(dashIndex > 0) {
+					String hostName = modifiedUri.substring(0, dashIndex);
+					modifiedUri = modifiedUri.substring(dashIndex);
+					try {
+						host = APILocator.getHostAPI().find(hostName, APILocator.getUserAPI().getSystemUser(), false);
+					} catch (DotDataException e) {
+						Logger.warn(this.getClass(), "Can't find host: '" + hostName + "'");
+					} catch (DotSecurityException e) {
+						Logger.warn(this.getClass(), "Can't find host: '" + hostName + "'");
+					}
+				} else {
+					Logger.warn(this.getClass(), "Bad uri: " + uri);
+				}
+			}
+			
+			//create a key for this uri and retrieve from the cache
+			String key = new MinifyCacheFileKey(modifiedUri, live, host).getKey();
+			response.getWriter().write(MinifyCacheHandler.getInstance().get(key).getFileData());
+		}
+		
+		Calendar end = Calendar.getInstance();
+		Logger.debug(this.getClass(), "MinifyServlet took " + (end.getTimeInMillis() - start.getTimeInMillis()) + "ms for uris " + uris);
 	}
 	
-	private Host getCurrentHost(ServletRequest request) throws ServletException {
-		return HostFactory.getCurrentHost(request);
+	/**
+	 * Retrieve the current host from the request
+	 * @return the current host
+	 * @throws ServletException an exception that wraps the actual dotCMS exception when the host can't be found
+	 */
+	private Host getCurrentHost(HttpServletRequest request) throws ServletException {
+		try {
+			return WebAPILocator.getHostWebAPI().getCurrentHost(request);
+		} catch (PortalException e) {
+			throw new ServletException(e);
+		} catch (SystemException e) {
+			throw new ServletException(e);
+		} catch (DotDataException e) {
+			throw new ServletException(e);
+		} catch (DotSecurityException e) {
+			throw new ServletException(e);
+		}
 	}
 	
-	private Boolean getIsLiveFromRequest(HttpServletRequest request) {
+	/**
+	 * @param request
+	 * @return whether the request is coming from live or edit/preview mode
+	 */
+	private Boolean isLive(HttpServletRequest request) {
 		String liveAsString = request.getParameter("live");
 		Boolean live = Boolean.TRUE;
 		if (liveAsString != null) {

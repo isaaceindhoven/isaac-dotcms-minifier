@@ -16,16 +16,16 @@ import com.dotmarketing.beans.Host;
  */
 public class MinifyCacheFileKey {
 	private static final String SEPARATOR = "-xXx-";
-	private String hostName;
-	private Long hostId;
-	private String uri;
-	private Boolean live;
+	private final String hostName;
+	private final String hostId;
+	private final String uri;
+	private final Boolean live;
 	
 	public MinifyCacheFileKey(String uri, boolean live, Host host) {
 		this(uri, live, host.getIdentifier(), host.getHostname()); 
 	}
 	
-	private MinifyCacheFileKey(String uri, boolean live, Long hostId, String hostName) {
+	private MinifyCacheFileKey(String uri, boolean live, String hostId, String hostName) {
 		this.hostId = hostId;
 		this.hostName = hostName;
 		this.uri = uri;
@@ -37,14 +37,14 @@ public class MinifyCacheFileKey {
 		if(parts.length != 4) {
 			throw new RuntimeException("Illegal key: " + key);
 		}
-		return new MinifyCacheFileKey(parts[2], Boolean.valueOf(parts[1]), Long.parseLong(parts[0]), parts[3]);
+		return new MinifyCacheFileKey(parts[2], Boolean.valueOf(parts[1]), parts[0], parts[3]);
 	}
 
 	public String getHostName() {
 		return hostName;
 	}
 
-	public Long getHostId() {
+	public String getHostId() {
 		return hostId;
 	}
 

@@ -8,13 +8,11 @@ package nl.isaac.dotcms.minify;
 
 import nl.isaac.dotcms.minify.shared.CacheGroupHandler;
 
-
 /**
  * Implementation of the CacheGroupHandler&lt;MinifyCacheFile&gt;. This Singleton class 
  * manages the cache for the minifier.
  * 
  * @author Xander
- *
  */
 public class MinifyCacheHandler extends CacheGroupHandler<MinifyCacheFile>{
 	public static final String CACHE_GROUP_NAME = "ISAAC_MinifyCache";

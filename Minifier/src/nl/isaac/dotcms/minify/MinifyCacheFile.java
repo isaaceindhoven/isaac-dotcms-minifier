@@ -27,7 +27,7 @@ public class MinifyCacheFile {
 		this.uri = uri;
 		this.live = live;
 		this.fileData = fileData;
-		this.modDate = modDate;
+		this.modDate = new Date(modDate.getTime());
 		this.key = new MinifyCacheFileKey(uri, live, host);
 	}
 	
@@ -41,12 +41,12 @@ public class MinifyCacheFile {
 		return fileData;
 	}
 	public Date getModDate() {
-		return modDate;
+		return new Date(modDate.getTime());
 	}
 	public String getHostName() {
 		return this.key.getHostName();
 	}
-	public Long getHostId() {
+	public String getHostId() {
 		return this.key.getHostId();
 	}
 	public MinifyCacheFileKey getKey() {

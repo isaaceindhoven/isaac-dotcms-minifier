@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
 Deploy-Class: 
-Plugin-Name: Minifier plugin
+Plugin-Name: Minifier Plugin
 Plugin-Version: 1.0
 Author: ISAAC

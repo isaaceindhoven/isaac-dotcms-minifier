@@ -17,20 +17,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import nl.isaac.dotcms.minify.dependencies.com.google.javascript.jscomp.CompilationLevel;
+import nl.isaac.dotcms.minify.dependencies.com.google.javascript.jscomp.CompilerOptions;
+import nl.isaac.dotcms.minify.dependencies.com.google.javascript.jscomp.JSSourceFile;
+import nl.isaac.dotcms.minify.dependencies.com.yahoo.platform.yui.compressor.CssCompressor;
 import nl.isaac.dotcms.minify.shared.ItemHandler;
 
 import com.dotmarketing.beans.Host;
-import com.dotmarketing.factories.HostFactory;
+import com.dotmarketing.business.APILocator;
+import com.dotmarketing.exception.DotDataException;
+import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.files.factories.FileFactory;
 import com.dotmarketing.portlets.files.model.File;
 import com.dotmarketing.util.Logger;
-import com.google.javascript.jscomp.CompilationLevel;
-import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.JSSourceFile;
-import com.yahoo.platform.yui.compressor.CssCompressor;
+
 /**
- * The class that defines the methods that collect new data from dotCMS.
- * It includes a class to get a single file and to get the initial load.
+ * The MinifyCacheItemHandler contains the code that retrieves a new/updated file from the cache.
  * 
  * @author Xander
  *
@@ -41,34 +43,42 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 		return getAllFilesFromDotCMS(true);
 	}
 	
-	/**
-	 * Get the file that is identified by the given key and host.
-	 * (The host is a parameter to avoid looking up the host twice) 
-	 * @return the minified file
-	 */
 	private MinifyCacheFile get(MinifyCacheFileKey minifyCacheFileKey, Host host) {
 		File file = FileFactory.getFileByURI(minifyCacheFileKey.getUri(), host, minifyCacheFileKey.getLive());
 		return get(file, host);
 	}
 	
-	/**
-	 * Get the file that is identified by the given key (getKey() from a MinifyCacheFileKey)
-	 */
 	public MinifyCacheFile get(String key) {
 		MinifyCacheFileKey minifyCacheFileKey = MinifyCacheFileKey.createInstanceWithKey(key);
-		Host host = HostFactory.getHostByHostName(minifyCacheFileKey.getHostName());
+		
+		//find the host by name
+		Host host = null;
+		try {
+			host = APILocator.getHostAPI().findByName(minifyCacheFileKey.getHostName(), APILocator.getUserAPI().getSystemUser(), false);
+		} catch(Exception e) {
+			//no problem, we'll try to find the alias
+		}
+		
+		//find the host by alias
+		if(host == null) {
+			try {
+				host = APILocator.getHostAPI().findByAlias(minifyCacheFileKey.getHostName(), APILocator.getUserAPI().getSystemUser(), false);
+			} catch (Exception e1) {
+				Logger.error(this.getClass(), "Can't find host with name " + minifyCacheFileKey.getHostName(), e1);
+				throw new RuntimeException("Can't find host with name " + minifyCacheFileKey.getHostName(), e1);
+			}
+		}
+		
 		return get(minifyCacheFileKey, host);
 	}
 	
-	/**
-	 * Get a file from the host
-	 */
 	public static MinifyCacheFile get(File file, Host host) {
 		MinifyCacheFileKey minifyCacheKey = new MinifyCacheFileKey(file.getURI(), file.isLive(), host);
 		String result = null;
 		try {
 			InputStream input = new ByteArrayInputStream(FileFactory.getFileData(file));
 			try {
+		
 				if(file.getFileName().contains(".min") || file.getFileName().equalsIgnoreCase("jquery.js")) {
 					//not minifying already minified file to avoid parser errors
 				} else if(file.getExtension().equalsIgnoreCase("css")) {
@@ -81,7 +91,7 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 					reader.close();
 				} else if(file.getExtension().equalsIgnoreCase("js")) {
 					Logger.info(MinifyCacheItemHandler.class, "Compressing file: " + minifyCacheKey.getReadableString());
-					com.google.javascript.jscomp.Compiler compiler = new com.google.javascript.jscomp.Compiler();
+					nl.isaac.dotcms.minify.dependencies.com.google.javascript.jscomp.Compiler compiler = new nl.isaac.dotcms.minify.dependencies.com.google.javascript.jscomp.Compiler();
 					CompilerOptions options = new CompilerOptions();
 					CompilationLevel.WHITESPACE_ONLY.setOptionsForCompilationLevel(options);
 					
@@ -119,27 +129,29 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 	
 	/**
 	 * Update the cache with all the files from DotCMS (all css and js files)
-	 * @param live if it should update live files or working files
+	 * @param live if it should update only live files (true) or only working files (false)
 	 */
 	public Map<String, MinifyCacheFile> getAllFilesFromDotCMS(boolean live) {
 		Map<String, MinifyCacheFile> cache = new ConcurrentHashMap<String, MinifyCacheFile>();
 		Logger.info(MinifyCacheItemHandler.class, "get all files from DotCMS for cache, live=" + live);
 		//iterate through all files of all hosts
-		
-		List<File> files;
-		if (live) {
-			files = FileFactory.getLiveFiles();
-		} else {
-			files = FileFactory.getWorkingFiles();
-		}
-
-		for(File file: files) {
-			if((file.getExtension().equalsIgnoreCase("css") || file.getExtension().equalsIgnoreCase("js"))) {
-				Host host = HostFactory.getParentHost(file);
-				MinifyCacheFileKey fileKey = new MinifyCacheFileKey(file.getURI(), live, host);
-				MinifyCacheFile minifyCacheFile = get(fileKey, host);
-				cache.put(fileKey.getKey(), minifyCacheFile);
+		List<Host> hosts;
+		try {
+			hosts = APILocator.getHostAPI().findAll(APILocator.getUserAPI().getSystemUser(), false);
+			for(Host host: hosts) {
+				List<File> files = APILocator.getFileAPI().getAllHostFiles(host, live, APILocator.getUserAPI().getSystemUser(), false);
+				for(File file: files) {
+					if((file.getExtension().equalsIgnoreCase("css") || file.getExtension().equalsIgnoreCase("js"))) {
+						MinifyCacheFileKey fileKey = new MinifyCacheFileKey(file.getURI(), live, host);
+						MinifyCacheFile minifyCacheFile = get(fileKey, host);
+						cache.put(fileKey.getKey(), minifyCacheFile);
+					}
+				}
 			}
+		} catch (DotDataException e) {
+			throw new RuntimeException(e);
+		} catch (DotSecurityException e) {
+			throw new RuntimeException(e);
 		}
 		
 		return cache;

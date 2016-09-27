@@ -6,7 +6,7 @@ package nl.isaac.dotcms.minify;
 * - http://www.geekyplugins.com/
 */
 
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -14,10 +14,12 @@ import java.util.Map;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.beans.Identifier;
 import com.dotmarketing.beans.Permission;
-import com.dotmarketing.business.IdentifierAPIImpl;
+import com.dotmarketing.business.APILocator;
+import com.dotmarketing.business.query.ValidationException;
+import com.dotmarketing.business.query.GenericQueryFactory.Query;
+import com.dotmarketing.common.model.ContentletSearch;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
-import com.dotmarketing.factories.HostFactory;
 import com.dotmarketing.portlets.categories.model.Category;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPIPostHook;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
@@ -30,7 +32,6 @@ import com.dotmarketing.portlets.structure.model.Relationship;
 import com.dotmarketing.portlets.structure.model.Structure;
 import com.dotmarketing.portlets.structure.model.ContentletRelationships.ContentletRelationshipRecords;
 import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.LuceneHits;
 import com.liferay.portal.model.User;
 
 /**
@@ -45,7 +46,9 @@ public class MinifyContentletPostHook implements ContentletAPIPostHook {
 
 	/**
 	 * When an asset is saved and/or published, this method is called to update the minified js/css cache
-	 * (when a js/css file is saved) 
+	 * (when a js/css file is saved)
+	 * Note: It's a bit of a hack, but this method is called after a change and there are no 
+	 * posthook methods specifically for file assets.  
 	 */
 	public void refreshReferencingContentlets(
 			com.dotmarketing.portlets.files.model.File file, boolean live) {
@@ -60,927 +63,565 @@ public class MinifyContentletPostHook implements ContentletAPIPostHook {
 	 * Utility method that retrieves the host of a file. See also jira item EE-1572
 	 */
 	private Host getHostOfFile(File file) {
-		IdentifierAPIImpl api = new IdentifierAPIImpl();
-		Identifier identifier;
 		try {
-			identifier = api.findFromInode(file.getIdentifier());
-			return HostFactory.getHost(identifier.getHostInode());
+			Identifier identifier = APILocator.getIdentifierAPI().findFromInode(file.getIdentifier());
+			return APILocator.getHostAPI().find(identifier.getHostId(), APILocator.getUserAPI().getSystemUser(), false);
+		} catch (DotSecurityException e) {
+			Logger.info(this.getClass(), "DotSecurityException while getting Host");
+			throw new RuntimeException(e);
 		} catch (DotDataException e) {
 			Logger.info(this.getClass(), "DotSecurityException while getting Host");
 			throw new RuntimeException(e);
 		}
 	}
+
+	/**
+	 *******************************************************************************
+	 *                       Dummy implemented methods                             *
+	 *******************************************************************************
+	 */
 	
 	
-	public void UpdateContentWithSystemHost(String hostIdentifier)
+	@Override
+	public void UpdateContentWithSystemHost(String arg0)
 			throws DotDataException {
-		// TODO Auto-generated method stub
-		
 	}
 
-	
-	public void addFileToContentlet(Contentlet contentlet, String fileInode,
-			String relationName, User user, boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void addFileToContentlet(Contentlet arg0, String arg1, String arg2,
+			User arg3, boolean arg4) {
 	}
 
-	
-	public void addImageToContentlet(Contentlet contentlet, String imageInode,
-			String relationName, User user, boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void addImageToContentlet(Contentlet arg0, String arg1, String arg2,
+			User arg3, boolean arg4) {
 	}
 
-	
-	public void addLinkToContentlet(Contentlet contentlet, String linkInode,
-			String relationName, User user, boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void addLinkToContentlet(Contentlet arg0, String arg1, String arg2,
+			User arg3, boolean arg4) {
 	}
 
-	
-	public void applyStructurePermissionsToChildren(Structure structure,
-			User user, List<Permission> permissions,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void applyStructurePermissionsToChildren(Structure arg0, User arg1,
+			List<Permission> arg2, boolean arg3) {
 	}
 
-	
-	public void archive(Contentlet contentlet, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void archive(Contentlet arg0, User arg1, boolean arg2) {
 	}
 
-	
-	public void archive(List<Contentlet> contentlets, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void archive(List<Contentlet> arg0, User arg1, boolean arg2) {
 	}
 
-	
-	public void checkin(Contentlet contentlet, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkin(Contentlet arg0, User arg1, boolean arg2,
+			Contentlet arg3) {
 	}
 
-	
-	public void checkin(Contentlet contentlet, List<Permission> permissions,
-			User user, boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkin(Contentlet arg0, List<Permission> arg1, User arg2,
+			boolean arg3, Contentlet arg4) {
 	}
 
-	
-	public void checkin(Contentlet contentlet, User user,
-			boolean respectFrontendRoles, List<Category> cats,
-			Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkin(Contentlet arg0, User arg1, boolean arg2,
+			List<Category> arg3, Contentlet arg4) {
 	}
 
-	
-	public void checkin(Contentlet contentlet,
-			Map<Relationship, List<Contentlet>> contentRelationships,
-			User user, boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkin(Contentlet arg0,
+			Map<Relationship, List<Contentlet>> arg1, User arg2, boolean arg3,
+			Contentlet arg4) {
 	}
 
-	
-	public void checkin(Contentlet contentlet, List<Category> cats,
-			List<Permission> permissions, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkin(Contentlet arg0, List<Category> arg1,
+			List<Permission> arg2, User arg3, boolean arg4, Contentlet arg5) {
 	}
 
-	
-	public void checkin(Contentlet contentlet,
-			Map<Relationship, List<Contentlet>> contentRelationships,
-			List<Category> cats, User user, boolean respectFrontendRoles,
-			Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkin(Contentlet arg0,
+			Map<Relationship, List<Contentlet>> arg1, List<Category> arg2,
+			User arg3, boolean arg4, Contentlet arg5) {
 	}
 
-	
-	public void checkin(Contentlet contentlet,
-			Map<Relationship, List<Contentlet>> contentRelationships,
-			List<Category> cats, List<Permission> permissions, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkin(Contentlet arg0,
+			Map<Relationship, List<Contentlet>> arg1, List<Category> arg2,
+			List<Permission> arg3, User arg4, boolean arg5, Contentlet arg6) {
 	}
 
-	
-	public void checkin(Contentlet currentContentlet,
-			ContentletRelationships relationshipsData, List<Category> cats,
-			List<Permission> selectedPermissions, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkin(Contentlet arg0, ContentletRelationships arg1,
+			List<Category> arg2, List<Permission> arg3, User arg4,
+			boolean arg5, Contentlet arg6) {
 	}
 
-	
-	public void checkinWithNoIndex(Contentlet contentlet, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkinWithNoIndex(Contentlet arg0, User arg1, boolean arg2,
+			Contentlet arg3) {
 	}
 
-	
-	public void checkinWithNoIndex(Contentlet contentlet,
-			List<Permission> permissions, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkinWithNoIndex(Contentlet arg0, List<Permission> arg1,
+			User arg2, boolean arg3, Contentlet arg4) {
 	}
 
-	
-	public void checkinWithNoIndex(Contentlet contentlet, User user,
-			boolean respectFrontendRoles, List<Category> cats,
-			Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkinWithNoIndex(Contentlet arg0, User arg1, boolean arg2,
+			List<Category> arg3, Contentlet arg4) {
 	}
 
-	
-	public void checkinWithNoIndex(Contentlet contentlet,
-			Map<Relationship, List<Contentlet>> contentRelationships,
-			User user, boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkinWithNoIndex(Contentlet arg0,
+			Map<Relationship, List<Contentlet>> arg1, User arg2, boolean arg3,
+			Contentlet arg4) {
 	}
 
-	
-	public void checkinWithNoIndex(Contentlet contentlet, List<Category> cats,
-			List<Permission> permissions, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkinWithNoIndex(Contentlet arg0, List<Category> arg1,
+			List<Permission> arg2, User arg3, boolean arg4, Contentlet arg5) {
 	}
 
-	
-	public void checkinWithNoIndex(Contentlet contentlet,
-			Map<Relationship, List<Contentlet>> contentRelationships,
-			List<Category> cats, User user, boolean respectFrontendRoles,
-			Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkinWithNoIndex(Contentlet arg0,
+			Map<Relationship, List<Contentlet>> arg1, List<Category> arg2,
+			User arg3, boolean arg4, Contentlet arg5) {
 	}
 
-	
-	public void checkinWithNoIndex(Contentlet contentlet,
-			Map<Relationship, List<Contentlet>> contentRelationships,
-			List<Category> cats, List<Permission> permissions, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkinWithNoIndex(Contentlet arg0,
+			Map<Relationship, List<Contentlet>> arg1, List<Category> arg2,
+			List<Permission> arg3, User arg4, boolean arg5, Contentlet arg6) {
 	}
 
-	
-	public void checkinWithNoIndex(Contentlet currentContentlet,
-			ContentletRelationships relationshipsData, List<Category> cats,
-			List<Permission> selectedPermissions, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkinWithNoIndex(Contentlet arg0,
+			ContentletRelationships arg1, List<Category> arg2,
+			List<Permission> arg3, User arg4, boolean arg5, Contentlet arg6) {
 	}
 
-	
-	public void checkinWithoutVersioning(Contentlet contentlet,
-			Map<Relationship, List<Contentlet>> contentRelationships,
-			List<Category> cats, List<Permission> permissions, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkinWithoutVersioning(Contentlet arg0,
+			Map<Relationship, List<Contentlet>> arg1, List<Category> arg2,
+			List<Permission> arg3, User arg4, boolean arg5, Contentlet arg6) {
 	}
 
-	
-	public void checkout(String contentletInode, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkout(String arg0, User arg1, boolean arg2, Contentlet arg3) {
 	}
 
-	
-	public void checkout(List<Contentlet> contentlets, User user,
-			boolean respectFrontendRoles, List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkout(List<Contentlet> arg0, User arg1, boolean arg2,
+			List<Contentlet> arg3) {
 	}
 
-	
-	public void checkout(String luceneQuery, User user,
-			boolean respectFrontendRoles, List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkout(String arg0, User arg1, boolean arg2,
+			List<Contentlet> arg3) {
 	}
 
-	
-	public void checkout(String luceneQuery, User user,
-			boolean respectFrontendRoles, int offset, int limit,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void checkout(String arg0, User arg1, boolean arg2, int arg3,
+			int arg4, List<Contentlet> arg5) {
 	}
 
-	
-	public void cleanField(Structure structure, Field field, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void cleanField(Structure arg0, Field arg1, User arg2, boolean arg3) {
 	}
 
-	
-	public void cleanHostField(Structure structure, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void cleanHostField(Structure arg0, User arg1, boolean arg2) {
 	}
 
-	
-	public long contentletCount(long returnValue) throws DotDataException {
-		// TODO Auto-generated method stub
+	@Override
+	public long contentletCount(long arg0) throws DotDataException {
 		return 0;
 	}
 
-	
-	public long contentletIdentifierCount(long returnValue)
-			throws DotDataException {
-		// TODO Auto-generated method stub
+	@Override
+	public long contentletIdentifierCount(long arg0) throws DotDataException {
 		return 0;
 	}
 
-	
-	public void convertContentletToFatContentlet(Contentlet cont,
-			com.dotmarketing.portlets.contentlet.business.Contentlet fatty,
-			com.dotmarketing.portlets.contentlet.business.Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void convertContentletToFatContentlet(Contentlet arg0,
+			com.dotmarketing.portlets.contentlet.business.Contentlet arg1,
+			com.dotmarketing.portlets.contentlet.business.Contentlet arg2) {
 	}
 
-	
+	@Override
 	public void convertFatContentletToContentlet(
-			com.dotmarketing.portlets.contentlet.business.Contentlet fatty,
-			Contentlet returnValue) {
-		// TODO Auto-generated method stub
+			com.dotmarketing.portlets.contentlet.business.Contentlet arg0,
+			Contentlet arg1) {
+	}
+
+	@Override
+	public void copyContentlet(Contentlet arg0, User arg1, boolean arg2,
+			Contentlet arg3) {
+	}
+
+	@Override
+	public void copyContentlet(Contentlet arg0, Host arg1, User arg2,
+			boolean arg3, Contentlet arg4) {
+	}
+
+	@Override
+	public void copyContentlet(Contentlet arg0, Folder arg1, User arg2,
+			boolean arg3, Contentlet arg4) {
+	}
+
+	@Override
+	public void copyProperties(Contentlet arg0, Map<String, Object> arg1) {
+	}
+
+	@Override
+	public void delete(Contentlet arg0, User arg1, boolean arg2) {
+	}
+
+	@Override
+	public void delete(List<Contentlet> arg0, User arg1, boolean arg2) {
+	}
+
+	@Override
+	public void delete(Contentlet arg0, User arg1, boolean arg2, boolean arg3) {
+	}
+
+	@Override
+	public void delete(List<Contentlet> arg0, User arg1, boolean arg2,
+			boolean arg3) {
+	}
+
+	@Override
+	public void deleteOldContent(Date arg0, int arg1, int arg2) {
+	}
+
+	@Override
+	public void deleteRelatedContent(Contentlet arg0, Relationship arg1,
+			User arg2, boolean arg3) {
+	}
+
+	@Override
+	public void deleteRelatedContent(Contentlet arg0, Relationship arg1,
+			boolean arg2, User arg3, boolean arg4) {
+	}
+
+	@Override
+	public void find(String arg0, User arg1, boolean arg2, Contentlet arg3) {
+	}
+
+	@Override
+	public void find(Category arg0, long arg1, boolean arg2, String arg3,
+			User arg4, boolean arg5, List<Contentlet> arg6) {
+	}
+
+	@Override
+	public void find(List<Category> arg0, long arg1, boolean arg2, String arg3,
+			User arg4, boolean arg5, List<Contentlet> arg6) {
+	}
+
+	@Override
+	public void findAllContent(int arg0, int arg1, List<Contentlet> arg2) {
+	}
+
+	@Override
+	public void findAllUserVersions(Identifier arg0, User arg1, boolean arg2,
+			List<Contentlet> arg3) {
+	}
+
+	@Override
+	public void findAllVersions(Identifier arg0, User arg1, boolean arg2,
+			List<Contentlet> arg3) {
+	}
+
+	@Override
+	public void findByStructure(Structure arg0, User arg1, boolean arg2,
+			int arg3, int arg4, List<Contentlet> arg5) {
+	}
+
+	@Override
+	public void findByStructure(String arg0, User arg1, boolean arg2, int arg3,
+			int arg4, List<Contentlet> arg5) {
+	}
+
+	@Override
+	public void findContentletByIdentifier(String arg0, boolean arg1,
+			long arg2, User arg3, boolean arg4, Contentlet arg5) {
+	}
+
+	@Override
+	public void findContentletForLanguage(long arg0, Identifier arg1,
+			Contentlet arg2) {
+	}
+
+	@Override
+	public void findContentlets(List<String> arg0, List<Contentlet> arg1) {
+		
 		
 	}
 
-	
-	public void copyContentlet(Contentlet currentContentlet, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void copyContentlet(Contentlet currentContentlet, Host host,
-			User user, boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void copyContentlet(Contentlet currentContentlet, Folder folder,
-			User user, boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void copyProperties(Contentlet contentlet,
-			Map<String, Object> properties) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void delete(Contentlet contentlet, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void delete(List<Contentlet> contentlets, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void delete(Contentlet contentlet, User user,
-			boolean respectFrontendRoles, boolean allVersions) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void delete(List<Contentlet> contentlets, User user,
-			boolean respectFrontendRoles, boolean allVersions) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void deleteOldContent(Date deleteFrom, int offset, int returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void deleteRelatedContent(Contentlet contentlet,
-			Relationship relationship, User user, boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void deleteRelatedContent(Contentlet contentlet,
-			Relationship relationship, boolean hasParent, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void find(String inode, User user, boolean respectFrontendRoles,
-			Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void find(Category category, long languageId, boolean live,
-			String orderBy, User user, boolean respectFrontendRoles,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void find(List<Category> categories, long languageId, boolean live,
-			String orderBy, User user, boolean respectFrontendRoles,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void findAllContent(int offset, int limit,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void findAllUserVersions(Identifier identifier, User user,
-			boolean respectFrontendRoles, List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void findAllVersions(Identifier identifier, User user,
-			boolean respectFrontendRoles, List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void findByStructure(Structure structure, User user,
-			boolean respectFrontendRoles, int limit, int offset,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void findByStructure(String structureInode, User user,
-			boolean respectFrontendRoles, int limit, int offset,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void findContentletByIdentifier(String identifier, boolean live,
-			long languageId, User user, boolean respectFrontendRoles,
-			Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void findContentletForLanguage(long languageId,
-			Identifier contentletId, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	
-	public void findContentletsByFolder(Folder parentFolder, User user,
-			boolean respectFrontendRoles) throws DotDataException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void findContentletsByHost(Host parentHost, User user,
-			boolean respectFrontendRoles) throws DotDataException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void findContentletsByIdentifiers(String[] identifiers,
-			boolean live, long languageId, User user,
-			boolean respectFrontendRoles, List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void findFieldValues(String structureInode, Field field, User user,
-			boolean respectFrontEndRoles, List<String> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void findPageContentlets(String HTMLPageIdentifier,
-			String containerIdentifier, String orderby, boolean working,
-			long languageId, User user, boolean respectFrontendRoles,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getAllLanguages(Contentlet contentlet, Boolean isLiveContent,
-			User user, boolean respectFrontendRoles,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getAllRelationships(Contentlet contentlet,
-			ContentletRelationships returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getAllRelationships(String contentletInode, User user,
-			boolean respectFrontendRoles, ContentletRelationships returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getBinaryFile(String contentletInode,
-			String velocityVariableName, User user, File returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getContentletReferences(Contentlet contentlet, User user,
-			boolean respectFrontendRoles, List<Map<String, Object>> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getFieldValue(Contentlet contentlet, Field theField,
-			Object returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getName(Contentlet contentlet, User user,
-			boolean respectFrontendRoles, String returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getNextReview(Contentlet content, User user,
-			boolean respectFrontendRoles, Date returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getReferencingContentlet(
-			com.dotmarketing.portlets.files.model.File file, boolean live,
-			User user, boolean respectFrontendRoles,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getRelatedContent(Contentlet contentlet, Relationship rel,
-			User user, boolean respectFrontendRoles,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getRelatedContent(Contentlet contentlet, Relationship rel,
-			boolean pullByParent, User user, boolean respectFrontendRoles,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getRelatedFiles(Contentlet contentlet, User user,
-			boolean respectFrontendRoles,
-			List<com.dotmarketing.portlets.files.model.File> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getRelatedIdentifier(Contentlet contentlet,
-			String relationshipType, User user, boolean respectFrontendRoles,
-			Identifier returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void getRelatedLinks(Contentlet contentlet, User user,
-			boolean respectFrontendRoles, List<Link> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public List<Contentlet> getSiblings(String identifier)
+	@Override
+	public void findContentletsByFolder(Folder arg0, User arg1, boolean arg2)
 			throws DotDataException {
-		// TODO Auto-generated method stub
+		
+		
+	}
+
+	@Override
+	public void findContentletsByHost(Host arg0, User arg1, boolean arg2)
+			throws DotDataException {
+		
+		
+	}
+
+	@Override
+	public void findContentletsByIdentifiers(String[] arg0, boolean arg1,
+			long arg2, User arg3, boolean arg4, List<Contentlet> arg5) {
+		
+		
+	}
+
+	@Override
+	public void findFieldValues(String arg0, Field arg1, User arg2,
+			boolean arg3, List<String> arg4) {
+		
+		
+	}
+
+	@Override
+	public void findPageContentlets(String arg0, String arg1, String arg2,
+			boolean arg3, long arg4, User arg5, boolean arg6,
+			List<Contentlet> arg7) {
+	}
+
+	@Override
+	public void getAllLanguages(Contentlet arg0, Boolean arg1, User arg2,
+			boolean arg3, List<Contentlet> arg4) {
+	}
+
+	@Override
+	public void getAllRelationships(Contentlet arg0,
+			ContentletRelationships arg1) {
+	}
+
+	@Override
+	public void getAllRelationships(String arg0, User arg1, boolean arg2,
+			ContentletRelationships arg3) {
+	}
+
+	@Override
+	public void getBinaryFile(String arg0, String arg1, User arg2,
+			java.io.File arg3) {
+	}
+
+	@Override
+	public void getContentletReferences(Contentlet arg0, User arg1,
+			boolean arg2, List<Map<String, Object>> arg3) {
+	}
+
+	@Override
+	public void getFieldValue(Contentlet arg0, Field arg1, Object arg2) {
+	}
+
+	@Override
+	public void getName(Contentlet arg0, User arg1, boolean arg2, String arg3) {
+	}
+
+	@Override
+	public void getNextReview(Contentlet arg0, User arg1, boolean arg2,
+			Date arg3) {
+	}
+
+	@Override
+	public void getReferencingContentlet(File arg0, boolean arg1, User arg2,
+			boolean arg3, List<Contentlet> arg4) {
+	}
+
+	@Override
+	public void getRelatedContent(Contentlet arg0, Relationship arg1,
+			User arg2, boolean arg3, List<Contentlet> arg4) {
+	}
+
+	@Override
+	public void getRelatedContent(Contentlet arg0, Relationship arg1,
+			boolean arg2, User arg3, boolean arg4, List<Contentlet> arg5) {
+	}
+
+	@Override
+	public void getRelatedFiles(Contentlet arg0, User arg1, boolean arg2,
+			List<File> arg3) {
+	}
+
+	@Override
+	public void getRelatedIdentifier(Contentlet arg0, String arg1, User arg2,
+			boolean arg3, Identifier arg4) {
+	}
+
+	@Override
+	public void getRelatedLinks(Contentlet arg0, User arg1, boolean arg2,
+			List<Link> arg3) {
+	}
+
+	@Override
+	public List<Contentlet> getSiblings(String arg0) throws DotDataException {
 		return null;
 	}
 
-	
-	public void isContentEqual(Contentlet contentlet1, Contentlet contentlet2,
-			User user, boolean respectFrontendRoles, boolean returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void isContentlet(String inode, boolean returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void isFieldTypeBoolean(Field field, boolean returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void isFieldTypeDate(Field field, boolean returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void isFieldTypeFloat(Field field, boolean returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void isFieldTypeLong(Field field, boolean returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void isFieldTypeString(Field field, boolean returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void isInodeIndexed(String inode, boolean returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void isInodeIndexed(String inode, int secondsToWait,
-			boolean returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void lock(Contentlet contentlet, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void publish(Contentlet contentlet, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void publish(List<Contentlet> contentlets, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void publishRelatedHtmlPages(Contentlet contentlet) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void reIndexForServerNode() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void refresh(Structure structure) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void refresh(Contentlet contentlet) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void refreshAllContent() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	
-	public void reindex() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void reindex(Structure structure) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void reindex(Contentlet contentlet) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void relateContent(Contentlet contentlet,
-			ContentletRelationshipRecords related, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void relateContent(Contentlet contentlet, Relationship rel,
-			List<Contentlet> related, User user, boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public boolean removeContentletFromIndex(String contentletInodeOrIdentifier)
-			throws DotDataException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	
-	public void removeUserReferences(String userId) throws DotDataException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void restoreVersion(Contentlet contentlet, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void search(String luceneQuery, int limit, int offset,
-			String sortBy, User user, boolean respectFrontendRoles,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void search(String luceneQuery, int limit, int offset,
-			String sortBy, User user, boolean respectFrontendRoles,
-			int requiredPermission, List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void setContentletProperty(Contentlet contentlet, Field field,
-			Object value) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void unarchive(List<Contentlet> contentlets, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void unarchive(Contentlet contentlet, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void unlock(Contentlet contentlet, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void unpublish(Contentlet contentlet, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void unpublish(List<Contentlet> contentlets, User user,
-			boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void validateContentlet(Contentlet contentlet, List<Category> cats) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void validateContentlet(Contentlet contentlet,
-			Map<Relationship, List<Contentlet>> contentRelationships,
-			List<Category> cats) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-	public void validateContentlet(Contentlet contentlet,
-			ContentletRelationships contentRelationships, List<Category> cats) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
+	@Override
 	public void getUrlMapForContentlet(Contentlet arg0, User arg1, boolean arg2)
 			throws DotSecurityException, DotDataException {
-		// TODO Auto-generated method stub
-		
-	}	
-	
-	public void addImageToContentlet(Contentlet contentlet, long imageInode,
-			String relationName, User user, boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
 	}
 
-	public void addLinkToContentlet(Contentlet contentlet, long linkInode,
-			String relationName, User user, boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void isContentEqual(Contentlet arg0, Contentlet arg1, User arg2,
+			boolean arg3, boolean arg4) {
 	}
 
-	public void checkout(long contentletInode, User user,
-			boolean respectFrontendRoles, Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void isContentlet(String arg0, boolean arg1) {
 	}
 
-	public void find(long inode, User user, boolean respectFrontendRoles,
-			Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void isFieldTypeBoolean(Field arg0, boolean arg1) {
 	}
 
-	public void findByStructure(long structureInode, User user,
-			boolean respectFrontendRoles, int limit, int offset,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void isFieldTypeDate(Field arg0, boolean arg1) {
 	}
 
-	public void findContentletByIdentifier(long identifier, boolean live,
-			long languageId, User user, boolean respectFrontendRoles,
-			Contentlet returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void isFieldTypeFloat(Field arg0, boolean arg1) {
 	}
 
-	public void findContentlets(List<Long> inodes, List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void isFieldTypeLong(Field arg0, boolean arg1) {
 	}
 
-	public void findFieldValues(long structureInode, Field field, User user,
-			boolean respectFrontEndRoles, List<String> returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void isFieldTypeString(Field arg0, boolean arg1) {
 	}
 
-	public void findPageContentlets(long HTMLPageIdentifier,
-			long containerIdentifier, String orderby, boolean working,
-			long languageId, User user, boolean respectFrontendRoles,
-			List<Contentlet> returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void isInodeIndexed(String arg0, boolean arg1) {
 	}
 
-	public void getAllRelationships(long contentletInode, User user,
-			boolean respectFrontendRoles, ContentletRelationships returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void isInodeIndexed(String arg0, int arg1, boolean arg2) {
 	}
 
-	public void getBinaryFile(Long contentletInode,
-			String velocityVariableName, User user, java.io.File returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void lock(Contentlet arg0, User arg1, boolean arg2) {
 	}
 
-	public void indexSearch(String luceneQuery, int limit, int offset,
-			String sortBy, User user, boolean respectFrontendRoles,
-			LuceneHits returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void publish(Contentlet arg0, User arg1, boolean arg2) {
 	}
 
-	public void isContentlet(long inode, boolean returnValue) {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void publish(List<Contentlet> arg0, User arg1, boolean arg2) {
 	}
 
-	public boolean removeContentletFromIndex(long contentletInodeOrIdentifier)
+	@Override
+	public void publishRelatedHtmlPages(Contentlet arg0) {
+	}
+
+	@Override
+	public void reIndexForServerNode() {
+	}
+
+	@Override
+	public void refresh(Structure arg0) {
+	}
+
+	@Override
+	public void refresh(Contentlet arg0) {
+	}
+
+	@Override
+	public void refreshAllContent() {
+	}
+
+	@Override
+	public void reindex() {
+	}
+
+	@Override
+	public void reindex(Structure arg0) {
+	}
+
+	@Override
+	public void reindex(Contentlet arg0) {
+	}
+
+	@Override
+	public void relateContent(Contentlet arg0,
+			ContentletRelationshipRecords arg1, User arg2, boolean arg3) {
+	}
+
+	@Override
+	public void relateContent(Contentlet arg0, Relationship arg1,
+			List<Contentlet> arg2, User arg3, boolean arg4) {
+	}
+
+	@Override
+	public boolean removeContentletFromIndex(String arg0)
 			throws DotDataException {
-		// TODO Auto-generated method stub
+		
 		return false;
 	}
-	
-	public void addFileToContentlet(Contentlet contentlet, long fileInode,
-			String relationName, User user, boolean respectFrontendRoles) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	public List<Contentlet> getSiblings(long fileInode) {
-		// TODO Auto-generated method stub
-		return new ArrayList<Contentlet>();
-	}
 
-	
+	@Override
+	public void removeUserReferences(String arg0) throws DotDataException {}
 
+	@Override
+	public void restoreVersion(Contentlet arg0, User arg1, boolean arg2) {}
+
+	@Override
+	public void search(String arg0, int arg1, int arg2, String arg3, User arg4,
+			boolean arg5, List<Contentlet> arg6) {}
+
+	@Override
+	public void search(String arg0, int arg1, int arg2, String arg3, User arg4,
+			boolean arg5, int arg6, List<Contentlet> arg7) {}
+
+	@Override
+	public void setContentletProperty(Contentlet arg0, Field arg1, Object arg2) {}
+
+	@Override
+	public void unarchive(List<Contentlet> arg0, User arg1, boolean arg2) {}
+
+	@Override
+	public void unarchive(Contentlet arg0, User arg1, boolean arg2) {}
+
+	@Override
+	public void unlock(Contentlet arg0, User arg1, boolean arg2) {}
+
+	@Override
+	public void unpublish(Contentlet arg0, User arg1, boolean arg2) {}
+
+	@Override
+	public void unpublish(List<Contentlet> arg0, User arg1, boolean arg2) {}
+
+	@Override
+	public void validateContentlet(Contentlet arg0, List<Category> arg1) {}
+
+	@Override
+	public void validateContentlet(Contentlet arg0,
+			Map<Relationship, List<Contentlet>> arg1, List<Category> arg2) {}
+
+	@Override
+	public void validateContentlet(Contentlet arg0,
+			ContentletRelationships arg1, List<Category> arg2) {}
+
+	@Override
+	public void DBSearch(Query arg0, User arg1, boolean arg2,
+			List<Map<String, Serializable>> arg3) throws ValidationException,
+			DotDataException {}
+
+	@Override
+	public void searchIndex(String arg0, int arg1, int arg2, String arg3,
+			User arg4, boolean arg5, List<ContentletSearch> arg6) {}
 
 }
