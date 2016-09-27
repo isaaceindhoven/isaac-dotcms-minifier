@@ -6,6 +6,7 @@
         <link rel="stylesheet" type="text/css" href="${file.trim()}" $!extra/>
       #end
     #else
+      #set($files = $minifyTools.removeNewlinesTabsAndSpaces($files))
       #set($uriList = $files.split(","))
       #set($firstUri = $uriList.get(0))
       #set($firstPath = '/')
@@ -30,6 +31,7 @@
         <script type="text/javascript" src="${file.trim()}"></script>
       #end
     #else
+      #set($files = $minifyTools.removeNewlinesTabsAndSpaces($files))
       #set($uriList = $files.split(","))
       #set($firstUri = $uriList.get(0))
       #set($firstPath = '/')
