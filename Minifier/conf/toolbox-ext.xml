@@ -3,9 +3,3 @@
 		<scope>application</scope>
 		<class>nl.isaac.dotcms.minify.viewtool.MinifyCacheTool</class>
 	</tool>	
-	
-	<tool>
-		<key>minifyTools</key>
-		<scope>application</scope>
-		<class>nl.isaac.dotcms.minify.viewtool.UtilTool</class>
-	</tool>	

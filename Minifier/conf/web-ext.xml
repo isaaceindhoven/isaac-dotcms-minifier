@@ -1,14 +1,4 @@
   <filter>
-    <filter-name>MinifyCacheWebdavFilter</filter-name>
-    <filter-class>nl.isaac.dotcms.minify.filter.MinifyCacheWebdavFilter</filter-class>
-  </filter>
-
-  <filter-mapping>
-    <filter-name>MinifyCacheWebdavFilter</filter-name>
-    <url-pattern>/webdav/*</url-pattern>
-  </filter-mapping>
-
-  <filter>
     <filter-name>MinifyServletRedirectFilter</filter-name>
     <filter-class>nl.isaac.dotcms.minify.filter.MinifyServletRedirectFilter</filter-class>
   </filter>

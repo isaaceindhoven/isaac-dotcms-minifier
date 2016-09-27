@@ -8,7 +8,6 @@ package nl.isaac.dotcms.minify;
 * @copyright Copyright (c) 2011 ISAAC Software Solutions B.V. (http://www.isaac.nl)
 */
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -24,13 +23,17 @@ import nl.isaac.dotcms.minify.dependencies.com.google.javascript.jscomp.Compiler
 import nl.isaac.dotcms.minify.dependencies.com.google.javascript.jscomp.JSSourceFile;
 import nl.isaac.dotcms.minify.dependencies.com.yahoo.platform.yui.compressor.CssCompressor;
 import nl.isaac.dotcms.minify.exception.DotCMSFileNotFoundException;
+import nl.isaac.dotcms.minify.shared.FileTools;
 import nl.isaac.dotcms.minify.shared.ItemHandler;
+
+import org.apache.poi.util.IOUtils;
 
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.APILocator;
+import com.dotmarketing.business.DotStateException;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
-import com.dotmarketing.portlets.files.factories.FileFactory;
+import com.dotmarketing.portlets.fileassets.business.FileAsset;
 import com.dotmarketing.portlets.files.model.File;
 import com.dotmarketing.util.Logger;
 
@@ -47,15 +50,21 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 	}
 	
 	private MinifyCacheFile get(MinifyCacheFileKey minifyCacheFileKey, Host host) throws DotCMSFileNotFoundException {
-		File file = FileFactory.getFileByURI(minifyCacheFileKey.getUri(), host, minifyCacheFileKey.getLive());
-		if(file == null || file.getURI() == null) {
-			Logger.error(MinifyCacheItemHandler.class, "Can't find file: " + minifyCacheFileKey.getReadableString());
-			if(minifyCacheFileKey.getUri().startsWith("dotcms")) {
-				Logger.warn(this.getClass(), "A filename may not start with 'dotcms'... This is a dotCMS issue!");
+		try{
+			FileAsset file = FileTools.getFileAssetByURI(minifyCacheFileKey.getUri(), host, minifyCacheFileKey.getLive());
+			//File file = fileFactory.getFileByURI(minifyCacheFileKey.getUri(), host, minifyCacheFileKey.getLive());
+			if(file == null || file.getURI() == null) {
+				Logger.error(MinifyCacheItemHandler.class, "Can't find file: " + minifyCacheFileKey.getReadableString());
+				if(minifyCacheFileKey.getUri().startsWith("dotcms")) {
+					Logger.warn(this.getClass(), "A filename may not start with 'dotcms'... This is a dotCMS issue!");
+				}
+				throw new DotCMSFileNotFoundException("File with uri " + minifyCacheFileKey.getUri() + " not found");
 			}
-			throw new DotCMSFileNotFoundException("File with uri " + minifyCacheFileKey.getUri() + " not found");
+			return get(file, host);
+		} catch(DotDataException ex) {
+			throw new RuntimeException(ex);
 		}
-		return get(file, host);
+		
 	}
 	
 	public MinifyCacheFile get(String key) {
@@ -82,11 +91,20 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 		return get(minifyCacheFileKey, host);
 	}
 	
-	public static MinifyCacheFile get(File file, Host host) {
-		MinifyCacheFileKey minifyCacheKey = new MinifyCacheFileKey(file.getURI(), file.isLive(), host);
+	public static MinifyCacheFile get(FileAsset file, Host host) {
+		MinifyCacheFileKey minifyCacheKey;
+		try{
+			minifyCacheKey = new MinifyCacheFileKey(file.getURI(), file.isLive(), host);
+		} catch(DotSecurityException e) {
+			throw new RuntimeException(e);
+		} catch (DotStateException e) {
+			throw new RuntimeException(e);
+		} catch (DotDataException e) {
+			throw new RuntimeException(e);
+		}
 		String result = null;
 		try {
-			InputStream input = new ByteArrayInputStream(FileFactory.getFileData(file));
+			InputStream input = file.getFileInputStream();
 			try {
 				if(file.getFileName().contains(".min") || file.getFileName().equalsIgnoreCase("jquery.js")) {
 					//not minifying already minified file to avoid parser errors
@@ -129,13 +147,21 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 		if (result == null || result.trim().isEmpty()) {
 			Logger.info(MinifyCacheItemHandler.class, "Storing raw file: " + minifyCacheKey.getReadableString());
 			try {
-				result = new String(FileFactory.getFileData(file), "UTF-8");
+				result = new String(IOUtils.toByteArray(file.getFileInputStream()), "UTF-8");
 			} catch (Throwable t) {
 				throw new RuntimeException("Can't store file in cache: " + minifyCacheKey.getReadableString(), t);
 			}
 		}
 		
-		return new MinifyCacheFile(file.getURI(), file.isLive(), result, file.getModDate(), host);
+		try{
+			return new MinifyCacheFile(file.getURI(), file.isLive(), result, file.getModDate(), host);
+		} catch(DotSecurityException e) {
+			throw new RuntimeException(e);
+		} catch (DotStateException e) {
+			throw new RuntimeException(e);
+		} catch (DotDataException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	/**

@@ -1,99 +1,46 @@
 #macro(minifyCss $files $extra)
-
   #if($UtilMethods.isSet($files))
-
     #set($debugMode = $request.getParameter("debug"))
-    #set($files = $minifyTools.removeNewlinesTabsAndSpaces($files))
-    #set($uriList = $files.split(","))
-
     #if($UtilMethods.isSet($debugMode))
-    
-      #foreach($file in $uriList)
-       	
-       	#set($cachebuster = $minifyTools.createCacheBuster($request, $file))
-        <link rel="stylesheet" type="text/css" href="${file.trim()}?$!{cachebuster}" $!extra/>
+      #foreach($file in $files.split(","))
+        <link rel="stylesheet" type="text/css" href="${file.trim()}" $!extra/>
       #end
-
     #else
-      
-      ## Extract the path excluding the filename from the first file in the list
-      ## We need this to be able to map the minifier to the same path as the files
-      ## so the references to the images (and other external files) stay correct.
-      ## Important: all files in the list will be mapped to the path of the first file
-      ## so make sure to not mix files in different folders in the same minifier.    
-      
+      #set($uriList = $files.split(","))
       #set($firstUri = $uriList.get(0))
       #set($firstPath = '/')
       #set($slashIndex = $firstUri.lastIndexOf('/') + 1)
       #if($slashIndex > 0)
         #set($firstPath = $firstUri.substring(0, $slashIndex))
       #end
-      
-      #set($cachebuster = $minifyTools.createCacheBuster($request, $uriList))
-      
       #if($EDIT_MODE || $PREVIEW_MODE)
-        <link rel="stylesheet" type="text/css" href="$!{firstPath}minifier.css?uris=${files}&live=false&$!{cachebuster}" $!extra/>
+        <link rel="stylesheet" type="text/css" href="$!{firstPath}minifier.css?uris=${files}&live=false" $!extra/>
       #else
-        <link rel="stylesheet" type="text/css" href="$!{firstPath}minifier.css?uris=${files}&$!{cachebuster}" $!extra/>
+        <link rel="stylesheet" type="text/css" href="$!{firstPath}minifier.css?uris=${files}" $!extra/>
       #end
-      
     #end
   #end  
 #end
 
-
-
-## The '$level' parameter in minifyJs is used to generate a special script tag for the ISAAC Cookie Service
-## To generate a normal script tag, only pass the $files parameter to the macro
-
-#macro(minifyJs $files $level)
+#macro(minifyJs $files)
   #if($UtilMethods.isSet($files))
-    
     #set($debugMode = $request.getParameter("debug"))
-    #set($files = $minifyTools.removeNewlinesTabsAndSpaces($files))
-    #set($uriList = $files.split(","))
-    
     #if($UtilMethods.isSet($debugMode))
-    
-      #foreach($file in $uriList)
-        
-        #set($cachebuster = $minifyTools.createCacheBuster($request, $file))
-        #if($UtilMethods.isSet($level))
-        	<script type="text/plain" data-ics-level="$!{level}" data-ics-src="${file.trim()}?$!{cachebuster}"></script>
-        #else
-            <script type="text/javascript" src="${file.trim()}?$!{cachebuster}"></script>
-        #end
-      
+      #foreach($file in $files.split(","))
+        <script type="text/javascript" src="${file.trim()}"></script>
       #end
     #else
-      
-
+      #set($uriList = $files.split(","))
       #set($firstUri = $uriList.get(0))
       #set($firstPath = '/')
       #set($slashIndex = $firstUri.lastIndexOf('/') + 1)
-      
       #if($slashIndex > 0)
         #set($firstPath = $firstUri.substring(0, $slashIndex))
       #end
-      
-      #set($cachebuster = $minifyTools.createCacheBuster($request,$uriList))
-      
       #if($EDIT_MODE || $PREVIEW_MODE)
-        
-        #if($UtilMethods.isSet($level))
-        	<script type="text/plain" data-ics-level="$!{level}" data-ics-src="$!{firstPath}minifier.js?uris=${files}&live=false&$!{cachebuster}"></script>
-        #else
-        	<script type="text/javascript" src="$!{firstPath}minifier.js?uris=${files}&live=false&$!{cachebuster}"></script>
-      	#end
-      	
+        <script type="text/javascript" src="$!{firstPath}minifier.js?uris=${files}&live=false"></script>
       #else
-      
-      	#if($UtilMethods.isSet($level))
-      		<script type="text/plain" data-ics-level="$!{level}" data-ics-src="$!{firstPath}minifier.js?uris=${files}&$!{cachebuster}"></script>
-      	#else
-      		<script type="text/javascript" src="$!{firstPath}minifier.js?uris=${files}&$!{cachebuster}"></script>
-      	#end
-      	
+        <script type="text/javascript" src="$!{firstPath}minifier.js?uris=${files}"></script>
       #end
     #end
   #end  

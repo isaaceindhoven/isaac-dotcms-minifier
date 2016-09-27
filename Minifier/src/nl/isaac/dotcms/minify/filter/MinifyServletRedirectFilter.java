@@ -44,7 +44,7 @@ public class MinifyServletRedirectFilter implements Filter {
 		HttpServletRequest request = (HttpServletRequest)req;
 		
 		if(request.getRequestURI().contains("minifier")) {
-			req.getRequestDispatcher("/servlets/MinifyServlet").forward(req, res);
+			req.getRequestDispatcher("/servlets/MinifyServlet").include(req, res);
 		} else {
 			chain.doFilter(req, res);
 		}
