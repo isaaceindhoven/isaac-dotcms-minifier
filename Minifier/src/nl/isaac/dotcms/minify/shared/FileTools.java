@@ -1,10 +1,19 @@
 package nl.isaac.dotcms.minify.shared;
+/**
+* dotCMS minifier by ISAAC - The Full Service Internet Agency is licensed 
+* under a Creative Commons Attribution 3.0 Unported License
+* - http://creativecommons.org/licenses/by/3.0/
+* - http://www.geekyplugins.com/
+* 
+* @copyright Copyright (c) 2011 ISAAC Software Solutions B.V. (http://www.isaac.nl)
+*/
 
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.beans.Identifier;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
+import com.dotmarketing.portlets.contentlet.business.DotContentletStateException;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.portlets.fileassets.business.FileAsset;
 import com.liferay.portal.model.User;
@@ -24,6 +33,9 @@ public class FileTools {
 			throw new RuntimeException(e);
 		} catch (DotDataException e) {
 			throw new RuntimeException(e);
+		} catch (DotContentletStateException e) {
+			// File not found, so return null
+			return null;
 		}
 	}
 }

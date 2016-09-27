@@ -24,16 +24,14 @@ import nl.isaac.dotcms.minify.MinifyCacheFileKey;
 import nl.isaac.dotcms.minify.MinifyCacheHandler;
 import nl.isaac.dotcms.minify.exception.DotCMSFileNotFoundException;
 import nl.isaac.dotcms.minify.shared.Configuration;
+import nl.isaac.dotcms.minify.shared.HostTools;
 
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.APILocator;
-import com.dotmarketing.business.web.WebAPILocator;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
-import com.liferay.portal.PortalException;
-import com.liferay.portal.SystemException;
 
 /**
  * Servlet that uses the MinifyCacheHandler to retrieve minified CSS and Javascript.
@@ -50,7 +48,7 @@ public class MinifyServlet extends HttpServlet {
     
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		Calendar start = Calendar.getInstance();
-		Host currentHost = getCurrentHost(request);
+		Host currentHost = HostTools.getCurrentHost(request);
 		
 		//validate uris parameter
 		if(!UtilMethods.isSet(request.getParameter("uris"))) {
@@ -79,58 +77,60 @@ public class MinifyServlet extends HttpServlet {
 		Date ifModifiedSince = new Date(request.getDateHeader("If-Modified-Since"));
 		StringBuilder output = new StringBuilder();
 		
-		for(String uri: uris) {
-			String modifiedUri = uri.trim().replaceAll("(\\r|\\n)", "");
-			if(modifiedUri != null && !modifiedUri.isEmpty()) {
-				Host host = currentHost;
-				
-				//check if this file needs to be retrieved from a different host 
-				if(modifiedUri.startsWith("http")) {
-					modifiedUri = modifiedUri.replaceAll("http://", "");
-					modifiedUri = modifiedUri.replaceAll("https://", "");
-					int dashIndex = modifiedUri.indexOf('/');
-					if(dashIndex > 0) {
-						String hostName = modifiedUri.substring(0, dashIndex);
-						modifiedUri = modifiedUri.substring(dashIndex);
-						host = findHostByNameOrAlias(hostName);
-					} else {
-						Logger.warn(this.getClass(), "Bad uri: '" + uri + "'");
+		try{
+			for(String uri: uris) {
+				String modifiedUri = uri.trim().replaceAll("(\\r|\\n)", "");
+				if(modifiedUri != null && !modifiedUri.isEmpty()) {
+					Host host = currentHost;
+					
+					//check if this file needs to be retrieved from a different host 
+					if(modifiedUri.startsWith("http")) {
+						modifiedUri = modifiedUri.replaceAll("http://", "");
+						modifiedUri = modifiedUri.replaceAll("https://", "");
+						int dashIndex = modifiedUri.indexOf('/');
+						if(dashIndex > 0) {
+							String hostName = modifiedUri.substring(0, dashIndex);
+							modifiedUri = modifiedUri.substring(dashIndex);
+							host = findHostByNameOrAlias(hostName);
+						} else {
+							Logger.warn(this.getClass(), "Bad uri: '" + uri + "'");
+						}
 					}
-				}
-				
-				//create a key for this uri and retrieve from the cache
-				String key = new MinifyCacheFileKey(modifiedUri, live, host).getKey();
-				MinifyCacheFile file = MinifyCacheHandler.getInstance().get(key);
-
-				Date modDate = file.getModDate();
-				if (modDate.compareTo(ifModifiedSince) >= 0) contentModified = true;
-				
-				try {
+					
+					//create a key for this uri and retrieve from the cache
+					String key = new MinifyCacheFileKey(modifiedUri, live, host).getKey();
+					
+					MinifyCacheFile file = MinifyCacheHandler.getInstance().get(key);
+					
+					Date modDate = file.getModDate();
+					if (modDate.compareTo(ifModifiedSince) >= 0) contentModified = true;
+					
 					output.append(file.getFileData());
-				} catch (DotCMSFileNotFoundException e) {
-					Logger.warn(this.getClass(), "Not adding file with URI " + modifiedUri + " and host " + host.getHostname() + " since it can't be found in dotCMS");
+					
+				} else {
+					Logger.warn(this.getClass(), "Can't minify uri that is empty. Maybe there's an error in the Minifier call? uris='" + request.getParameter("uris") + "'");
 				}
+			}
+			long maxAge = new Long(Configuration.getBrowserCacheMaxAge()).longValue();
+			response.addHeader("Cache-Control", "public, max-age=" + maxAge);
+			response.setDateHeader("Expires", new Date().getTime() + (maxAge * 1000));
+			
+			if (contentModified) {
+				response.setDateHeader("Last-Modified", new Date().getTime());
+				response.getWriter().write(output.toString());
 				
 			} else {
-				Logger.warn(this.getClass(), "Can't minify uri that is empty. Maybe there's an error in the Minifier call? uris='" + request.getParameter("uris") + "'");
+				// No files are modified since the browser cached it, so send status 304
+				// Browser will then use the file from his cache
+				response.setStatus(304);
 			}
+			
+			Calendar end = Calendar.getInstance();
+			Logger.debug(this.getClass(), "MinifyServlet took " + (end.getTimeInMillis() - start.getTimeInMillis()) + "ms for uris " + uris);
+		} catch (DotCMSFileNotFoundException e) {
+			Logger.info(this, "One or more files can't be found in dotCMS, sending 404 response");
+			response.sendError(404);
 		}
-		int maxAge = new Integer(Configuration.getBrowserCacheMaxAge()).intValue();
-		response.addHeader("Cache-Control", "public, max-age=" + maxAge);
-		response.setDateHeader("Expires", new Date().getTime() + (maxAge * 1000));
-		
-		if (contentModified) {
-			response.setDateHeader("Last-Modified", new Date().getTime());
-			response.getWriter().write(output.toString());
-
-		} else {
-			// No files are modified since the browser cached it, so send status 304
-			// Browser will then use the file from his cache
-			response.setStatus(304);
-		}
-		
-		Calendar end = Calendar.getInstance();
-		Logger.debug(this.getClass(), "MinifyServlet took " + (end.getTimeInMillis() - start.getTimeInMillis()) + "ms for uris " + uris);
 	}
 	
 	private Host findHostByNameOrAlias(String hostName) {
@@ -166,25 +166,6 @@ public class MinifyServlet extends HttpServlet {
 		return host;
 	}
 
-	/**
-	 * Retrieve the current host from the request
-	 * @return the current host
-	 * @throws ServletException an exception that wraps the actual dotCMS exception when the host can't be found
-	 */
-	private Host getCurrentHost(HttpServletRequest request) throws ServletException {
-		try {
-			return WebAPILocator.getHostWebAPI().getCurrentHost(request);
-		} catch (PortalException e) {
-			throw new ServletException(e);
-		} catch (SystemException e) {
-			throw new ServletException(e);
-		} catch (DotDataException e) {
-			throw new ServletException(e);
-		} catch (DotSecurityException e) {
-			throw new ServletException(e);
-		}
-	}
-	
 	/**
 	 * @param request
 	 * @return whether the request is coming from live or edit/preview mode

@@ -52,7 +52,6 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 	private MinifyCacheFile get(MinifyCacheFileKey minifyCacheFileKey, Host host) throws DotCMSFileNotFoundException {
 		try{
 			FileAsset file = FileTools.getFileAssetByURI(minifyCacheFileKey.getUri(), host, minifyCacheFileKey.getLive());
-			//File file = fileFactory.getFileByURI(minifyCacheFileKey.getUri(), host, minifyCacheFileKey.getLive());
 			if(file == null || file.getURI() == null) {
 				Logger.error(MinifyCacheItemHandler.class, "Can't find file: " + minifyCacheFileKey.getReadableString());
 				if(minifyCacheFileKey.getUri().startsWith("dotcms")) {
