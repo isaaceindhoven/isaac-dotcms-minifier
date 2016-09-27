@@ -1,5 +1,6 @@
 package nl.isaac.dotcms.util.osgi;
 
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,7 +10,9 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,10 +28,17 @@ import javax.servlet.ServletException;
 
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.tools.view.context.ViewContext;
+import org.quartz.CronTrigger;
+import org.quartz.Job;
+import org.quartz.JobDetail;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.impl.StdSchedulerFactory;
 
 import com.dotcms.repackage.org.apache.commons.lang.Validate;
 import com.dotcms.repackage.org.apache.felix.http.api.ExtHttpService;
 import com.dotcms.repackage.org.osgi.framework.BundleContext;
+import com.dotcms.repackage.org.osgi.framework.FrameworkUtil;
 import com.dotcms.repackage.org.osgi.framework.ServiceReference;
 import com.dotcms.repackage.org.osgi.util.tracker.ServiceTracker;
 import com.dotcms.rest.WebResource;
@@ -53,6 +63,7 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 	private boolean languageVariablesNotAdded = true;
 	private static final String DOTCMS_HOME;
 
+    private Scheduler scheduler;
     private Properties schedulerProperties;
 	
 	static {
@@ -229,9 +240,17 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 	}
 
 	/**
-	 * Registers the ENGLISH language variables that are saved in the conf/language-ext.properties file
+	 * Registers the language variables that are saved in the conf/language-ext.properties file in the English (en_US) Language
 	 */
 	protected void addLanguageVariables(BundleContext context) {
+		Language defaultLanguage = APILocator.getLanguageAPI().getLanguage("en", "US");
+		addLanguageVariables(context, defaultLanguage);
+	}
+
+	/**
+	 * Registers the language variables that are saved in the conf/language-ext.properties file in the given Language
+	 */
+	protected void addLanguageVariables(BundleContext context, Language language) {
 		if(languageVariablesNotAdded) {
 			languageVariablesNotAdded = false;
 			try {
@@ -246,8 +265,8 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 					languageVariables.put(key, resourceBundle.getString(key));
 				}
 
-				// Register the variables in locale en_US
-				addLanguageVariables(languageVariables, APILocator.getLanguageAPI().getLanguage("en", "US"));
+				// Register the variables in the given language
+				addLanguageVariables(languageVariables, language);
 
 			} catch (IOException e) {
 				Logger.warn(this, "Exception while registering language variables", e);
@@ -368,11 +387,50 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
         return properties;
 	}
 	
+	/**
+	 * Adds a Job, and starts a Scheduler when none was yet started
+	 */
+	protected void addJob(BundleContext context, Class<? extends Job> clazz, String cronExpression) {
+		String jobName = clazz.getName();
+		String jobGroup = FrameworkUtil.getBundle(clazz).getSymbolicName();
+        JobDetail job = new JobDetail(jobName, jobGroup, clazz);
+        job.setDurability(false);
+        job.setVolatility(true);
+        job.setDescription(jobName);
+        
+        try {
+	        CronTrigger trigger = new CronTrigger(jobName, jobGroup, cronExpression);
+	        
+	        if(scheduler == null) {
+	        	if(schedulerProperties == null) {
+	        		schedulerProperties = getDefaultSchedulerProperties();
+	        	}
+	        	scheduler = new StdSchedulerFactory(schedulerProperties).getScheduler();
+				scheduler.start();
+	        }
+	        
+			Date date = scheduler.scheduleJob(job, trigger);
+			
+			Logger.info(this, "Scheduled job " + jobName + ", next trigger is on " + date);
+			
+        } catch (ParseException e) {
+        	Logger.error(this, "Cron expression '" + cronExpression + "' has an exception. Throwing IllegalArgumentException", e);
+        	throw new IllegalArgumentException(e);
+        } catch (SchedulerException e) {
+        	Logger.error(this, "Unable to schedule job " + jobName, e);
+		}
+		
+	}
 
 	@Override
 	protected void unregisterServices(BundleContext context) throws Exception {
 		super.unregisterServices(context);
 		removeTrackedServices();
+		if(scheduler != null) {
+			scheduler.shutdown(false);
+			scheduler = null;
+			schedulerProperties = null;
+		}
 	}
 	
 	/**

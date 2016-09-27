@@ -91,15 +91,17 @@ public class FileChangedPostHook extends ContentletAPIPostHookAbstractImp {
 	}
 
 	private void handleContentlet(Contentlet contentlet) {
-		Boolean isFileAsset = APILocator.getFileAssetAPI().isFileAsset(
-				contentlet);
-
+		Boolean isFileAsset = APILocator.getFileAssetAPI().isFileAsset(contentlet);
+		
+		Logger.info(this, "handleContentlet = " + contentlet.getTitle());
+		Logger.info(this, "File isFileAsset = " + isFileAsset);
+		
 		if (isFileAsset) {
-			FileAsset file = APILocator.getFileAssetAPI().fromContentlet(
-					contentlet);
+			FileAsset file = APILocator.getFileAssetAPI().fromContentlet(contentlet);
+			
 			try {
 
-				if (file.getExtension().equalsIgnoreCase("css") || file.getExtension().equalsIgnoreCase("js")) {
+				if (contentlet.getTitle().endsWith("css") || contentlet.getTitle().endsWith("js")) {
 					Host host = getHostOfFile(file);
 					MinifyCacheKey keyEditPreview = new MinifyCacheKey(file.getURI(), host.getHostname(), false);
 					MinifyCacheKey keyLive = new MinifyCacheKey(file.getURI(), host.getHostname(), true);

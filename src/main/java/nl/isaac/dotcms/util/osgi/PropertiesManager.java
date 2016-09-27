@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.PropertyResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.dotcms.repackage.org.apache.commons.io.FilenameUtils;
 import com.dotcms.repackage.org.osgi.framework.Bundle;
 import com.dotcms.repackage.org.osgi.framework.FrameworkUtil;
 import com.dotmarketing.business.APILocator;
@@ -14,13 +13,13 @@ import com.dotmarketing.util.Logger;
 
 public class PropertiesManager {
 	private boolean getPropertiesFromPluginAPI;
-	private String pluginName;
+	private final String pluginName;
 	private final Bundle bundle;
 	private Map<String, String> properties;
 	
 	public PropertiesManager() {
 		this.bundle = FrameworkUtil.getBundle(this.getClass());
-		this.pluginName = FilenameUtils.getBaseName(bundle.getLocation());
+		this.pluginName = "osgi/" + bundle.getHeaders().get("Bundle-Name") + "/" + bundle.getBundleId(); 
 		this.getPropertiesFromPluginAPI = true;
 		Logger.info(this, "Using plugin name '" + pluginName + "', use-plugin-api=" + getPropertiesFromPluginAPI);
 	}
@@ -50,7 +49,7 @@ public class PropertiesManager {
 		try {
 			
 			// Read all the properties from the properties file
-			URL resourceURL = bundle.getResource("ext/plugin.properties");
+			URL resourceURL = bundle.getResource("conf/plugin.properties");
 			PropertyResourceBundle resourceBundle = new PropertyResourceBundle(resourceURL.openStream());
 			
 			// Put the properties in the map
