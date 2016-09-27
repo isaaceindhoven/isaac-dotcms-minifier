@@ -72,12 +72,14 @@ public class MinifyCacheWebdavFilter implements Filter {
 			Logger.debug(this.getClass(), "hostName: " + hostName + ", live: " + live + ", uri: " + uri);
 			
 			try {
-				//find the host
-				Host host = APILocator.getHostAPI().findByName(hostName, APILocator.getUserAPI().getSystemUser(), false);
-				
-				//update the cache
-				String key = new MinifyCacheFileKey(uri, live, host).getKey();
-				MinifyCacheHandler.getInstance().updateWithItemHandler(key);
+				if(uri.endsWith(".css") || uri.endsWith(".js")) {
+					//find the host
+					Host host = APILocator.getHostAPI().findByName(hostName, APILocator.getUserAPI().getSystemUser(), false);
+					
+					//update the cache
+					String key = new MinifyCacheFileKey(uri, live, host).getKey();
+					MinifyCacheHandler.getInstance().updateWithItemHandler(key);
+				}
 			} catch (DotDataException e) {
 				throw new RuntimeException("Can't find host", e);
 			} catch (DotSecurityException e) {

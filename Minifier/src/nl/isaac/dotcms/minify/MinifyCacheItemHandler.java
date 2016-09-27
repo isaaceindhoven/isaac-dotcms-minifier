@@ -23,6 +23,7 @@ import nl.isaac.dotcms.minify.dependencies.com.google.javascript.jscomp.Compilat
 import nl.isaac.dotcms.minify.dependencies.com.google.javascript.jscomp.CompilerOptions;
 import nl.isaac.dotcms.minify.dependencies.com.google.javascript.jscomp.JSSourceFile;
 import nl.isaac.dotcms.minify.dependencies.com.yahoo.platform.yui.compressor.CssCompressor;
+import nl.isaac.dotcms.minify.exception.DotCMSFileNotFoundException;
 import nl.isaac.dotcms.minify.shared.ItemHandler;
 
 import com.dotmarketing.beans.Host;
@@ -45,8 +46,12 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 		return getAllFilesFromDotCMS(true);
 	}
 	
-	private MinifyCacheFile get(MinifyCacheFileKey minifyCacheFileKey, Host host) {
+	private MinifyCacheFile get(MinifyCacheFileKey minifyCacheFileKey, Host host) throws DotCMSFileNotFoundException {
 		File file = FileFactory.getFileByURI(minifyCacheFileKey.getUri(), host, minifyCacheFileKey.getLive());
+		if(file == null || file.getURI() == null) {
+			Logger.error(MinifyCacheItemHandler.class, "Can't find file: " + minifyCacheFileKey.getReadableString());
+			throw new DotCMSFileNotFoundException("File with uri " + minifyCacheFileKey.getUri() + "not found");
+		}
 		return get(file, host);
 	}
 	
@@ -80,7 +85,6 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 		try {
 			InputStream input = new ByteArrayInputStream(FileFactory.getFileData(file));
 			try {
-		
 				if(file.getFileName().contains(".min") || file.getFileName().equalsIgnoreCase("jquery.js")) {
 					//not minifying already minified file to avoid parser errors
 				} else if(file.getExtension().equalsIgnoreCase("css")) {
@@ -112,8 +116,10 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 			} finally {
 				input.close();
 			}
-		} catch (IOException ioe) {
+		} catch (IOException ioe) { 
 			Logger.warn(MinifyCacheItemHandler.class, "Cant compress file, problem witn input stream: " + minifyCacheKey.getReadableString());
+		} catch (Throwable t) {
+			Logger.error(MinifyCacheItemHandler.class, "Cant compress file: " + minifyCacheKey.getReadableString());			
 		}
 		
 		//If there's no result, get the non-minified data
@@ -121,8 +127,8 @@ public class MinifyCacheItemHandler implements ItemHandler<MinifyCacheFile> {
 			Logger.info(MinifyCacheItemHandler.class, "Storing raw file: " + minifyCacheKey.getReadableString());
 			try {
 				result = new String(FileFactory.getFileData(file), "UTF-8");
-			} catch (IOException e) {
-				throw new RuntimeException("Can't store file in cache: " + minifyCacheKey.getReadableString(), e);
+			} catch (Throwable t) {
+				throw new RuntimeException("Can't store file in cache: " + minifyCacheKey.getReadableString(), t);
 			}
 		}
 		

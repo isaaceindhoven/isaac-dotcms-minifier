@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import nl.isaac.dotcms.minify.MinifyCacheFileKey;
 import nl.isaac.dotcms.minify.MinifyCacheHandler;
+import nl.isaac.dotcms.minify.exception.DotCMSFileNotFoundException;
 
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.APILocator;
@@ -72,38 +73,73 @@ public class MinifyServlet extends HttpServlet {
 		Boolean live = isLive(request);
 		
 		for(String uri: uris) {
-			String modifiedUri = uri.trim();
-			Host host = currentHost;
-			
-			//check if this file needs to be retrieved from a different host 
-			if(modifiedUri.startsWith("http")) {
-				modifiedUri = modifiedUri.replaceAll("http://", "");
-				modifiedUri = modifiedUri.replaceAll("https://", "");
-				int dashIndex = modifiedUri.indexOf('/');
-				if(dashIndex > 0) {
-					String hostName = modifiedUri.substring(0, dashIndex);
-					modifiedUri = modifiedUri.substring(dashIndex);
-					try {
-						host = APILocator.getHostAPI().find(hostName, APILocator.getUserAPI().getSystemUser(), false);
-					} catch (DotDataException e) {
-						Logger.warn(this.getClass(), "Can't find host: '" + hostName + "'");
-					} catch (DotSecurityException e) {
-						Logger.warn(this.getClass(), "Can't find host: '" + hostName + "'");
+			String modifiedUri = uri.trim().replaceAll("(\\r|\\n)", "");
+			if(modifiedUri != null && !modifiedUri.isEmpty()) {
+				Host host = currentHost;
+				
+				//check if this file needs to be retrieved from a different host 
+				if(modifiedUri.startsWith("http")) {
+					modifiedUri = modifiedUri.replaceAll("http://", "");
+					modifiedUri = modifiedUri.replaceAll("https://", "");
+					int dashIndex = modifiedUri.indexOf('/');
+					if(dashIndex > 0) {
+						String hostName = modifiedUri.substring(0, dashIndex);
+						modifiedUri = modifiedUri.substring(dashIndex);
+						host = findHostByNameOrAlias(hostName);
+					} else {
+						Logger.warn(this.getClass(), "Bad uri: '" + uri + "'");
 					}
-				} else {
-					Logger.warn(this.getClass(), "Bad uri: '" + uri + "'");
 				}
+				
+				//create a key for this uri and retrieve from the cache
+				String key = new MinifyCacheFileKey(modifiedUri, live, host).getKey();
+				try {
+					response.getWriter().write(MinifyCacheHandler.getInstance().get(key).getFileData());
+				} catch (DotCMSFileNotFoundException e) {
+					Logger.warn(this.getClass(), "Not adding file with URI " + modifiedUri + " and host " + host.getHostname() + " since it can't be found in dotCMS");
+				}
+			} else {
+				Logger.warn(this.getClass(), "Can't minify uri that is empty. Maybe there's an error in the Minifier call? uris='" + request.getParameter("uris") + "'");
 			}
-			
-			//create a key for this uri and retrieve from the cache
-			String key = new MinifyCacheFileKey(modifiedUri, live, host).getKey();
-			response.getWriter().write(MinifyCacheHandler.getInstance().get(key).getFileData());
 		}
 		
 		Calendar end = Calendar.getInstance();
 		Logger.debug(this.getClass(), "MinifyServlet took " + (end.getTimeInMillis() - start.getTimeInMillis()) + "ms for uris " + uris);
 	}
 	
+	private Host findHostByNameOrAlias(String hostName) {
+		Host host = null;
+		Exception e1 = null;
+		Exception e2 = null;
+		
+		try {
+			host = APILocator.getHostAPI().findByName(hostName, APILocator.getUserAPI().getSystemUser(), false);
+		} catch (DotDataException e) {
+			e1 = e;
+		} catch (DotSecurityException e) {
+			e1 = e;
+		}
+		
+		if(host == null) {
+			try {
+				host = APILocator.getHostAPI().findByAlias(hostName, APILocator.getUserAPI().getSystemUser(), false);
+			} catch (DotDataException e) {
+				e2 = e;
+			} catch (DotSecurityException e) {
+				e2 = e;
+			}
+		}
+		
+		if(host == null) {
+			Logger.error(this.getClass(), "Unable to find host with name " + hostName + " (see the following exceptions");
+			Logger.error(this.getClass(), "Exception lookup up hostName", e1);
+			Logger.error(this.getClass(), "Exception looking up alias", e2);
+			throw new RuntimeException("Unable to find host with name " + hostName + " (see previous exceptions)");			
+		}
+		
+		return host;
+	}
+
 	/**
 	 * Retrieve the current host from the request
 	 * @return the current host

@@ -3,7 +3,7 @@
     #set($debugMode = $request.getParameter("debug"))
     #if($UtilMethods.isSet($debugMode))
       #foreach($file in $files.split(","))
-        <link rel="stylesheet" type="text/css" href="${file}" $!extra/>
+        <link rel="stylesheet" type="text/css" href="${file.trim()}" $!extra/>
       #end
     #else
       #set($uriList = $files.split(","))
@@ -27,7 +27,7 @@
     #set($debugMode = $request.getParameter("debug"))
     #if($UtilMethods.isSet($debugMode))
       #foreach($file in $files.split(","))
-        <script type="text/javascript" src="${file}"></script>
+        <script type="text/javascript" src="${file.trim()}"></script>
       #end
     #else
       #set($uriList = $files.split(","))

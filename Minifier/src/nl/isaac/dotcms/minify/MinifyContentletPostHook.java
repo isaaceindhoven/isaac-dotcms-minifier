@@ -75,5 +75,11 @@ public class MinifyContentletPostHook extends ContentletAPIPostHookAbstractImp {
 	public void refreshContentUnderHost(Host arg0)
 			throws DotReindexStateException {
 	}
+	
+	@Override
+	public void removeFolderReferences(Folder arg0) throws DotDataException {
+		// TODO Auto-generated method stub
+		
+	}
 
 }
