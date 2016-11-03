@@ -85,6 +85,10 @@ public abstract class AbstractMinifyViewTool {
 	 */
 	public static final String REWRITE_PATTERN = "minifier_rewrite_";
 
+	/** A String that is used in debug mode to retrieve files from another host
+	 */
+	public static final String PROXY_SERVLET_URL = "/app/minifier/proxy/";
+
 
 	// /////////////////
 	// PUBLIC METHODS //
@@ -430,17 +434,33 @@ public abstract class AbstractMinifyViewTool {
 		String basePath = fileAsset.getPath();
 		String fullPath = basePath + fileAsset.getFileName();
 
-		if (host != null) {
-			fullPath = "//" + host.getHostname() + fullPath;
+		String debugUrl;
+		if (host == null) {
+
+			// if the file is on the same host, just use the file's URL
+			debugUrl = fullPath;
+
+		} else {
+
+			// if the file is on another host, we have to use a proxy servlet
+			// to get the raw file contents
+
+			String hostname;
+			try {
+				hostname = URLEncoder.encode(host.getHostname(), "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				throw new RuntimeException(e);
+			}
+
+			debugUrl = PROXY_SERVLET_URL + hostname + fullPath;
 		}
 
-		try {
-			fullPath = URLEncoder.encode(fullPath, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
+		// if needed, set the domain in the debug url
+		if (UtilMethods.isSet(domain)) {
+			debugUrl = "//" + domain + debugUrl;
 		}
 
-		return "/app/service/minifier/raw?uri=" + fullPath;
+		return debugUrl;
 	}
 
 	/**

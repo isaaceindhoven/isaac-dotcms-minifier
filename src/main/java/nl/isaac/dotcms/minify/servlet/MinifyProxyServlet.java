@@ -13,13 +13,24 @@ import com.dotmarketing.util.Logger;
 
 import nl.isaac.dotcms.minify.shared.HostTools;
 
-public class MinifyDebugServlet extends AbstractMinifyServlet {
+/**
+ * This servlet is used in debug mode, if the file that must be retrieved is on another host. It just
+ * gets the file contents from the given host on the given path and returns this to the browser.
+ *
+ * @author Jorith van den Heuvel, ISAAC
+*/
+public class MinifyProxyServlet extends AbstractMinifyServlet {
 	private static final long serialVersionUID = 1L;
 
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+		String hostname = request.getParameter("host");
 		String uriAsString = request.getParameter("uri");
 		boolean isLiveMode = HostTools.isLiveMode(request);
+
+		Logger.info(this, "Hostname: " + hostname);
+		Logger.info(this, "URI: " + uriAsString);
 
 		URI uri;
 		try {
@@ -30,9 +41,7 @@ public class MinifyDebugServlet extends AbstractMinifyServlet {
 			return;
 		}
 
-		Host defaultHost = HostTools.getCurrentHost(request);
-
-		Host host = getHostOfUri(uri, defaultHost);
+		Host host = HostTools.getHostByDomainName(hostname);
 		ContentType currentContentType = ContentType.getContentType(uri);
 		String fileContent = getFileContent(uri, host, isLiveMode);
 
