@@ -11,6 +11,9 @@ import javax.servlet.http.HttpServletResponse;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.util.Logger;
 
+import nl.isaac.dotcms.minify.exception.DotCMSFileNotFoundException;
+
+
 import nl.isaac.dotcms.minify.shared.HostTools;
 
 /**
@@ -29,9 +32,6 @@ public class MinifyProxyServlet extends AbstractMinifyServlet {
 		String uriAsString = request.getParameter("uri");
 		boolean isLiveMode = HostTools.isLiveMode(request);
 
-		Logger.info(this, "Hostname: " + hostname);
-		Logger.info(this, "URI: " + uriAsString);
-
 		URI uri;
 		try {
 			uri = new URI(uriAsString);
@@ -42,8 +42,30 @@ public class MinifyProxyServlet extends AbstractMinifyServlet {
 		}
 
 		Host host = HostTools.getHostByDomainName(hostname);
-		ContentType currentContentType = ContentType.getContentType(uri);
-		String fileContent = getFileContent(uri, host, isLiveMode);
+
+		if (host == null) {
+			Logger.error(this, "Cannot find host with hostname '" + hostname + "'");
+			response.sendError(404);
+			return;
+		}
+
+		ContentType currentContentType;
+		try {
+			currentContentType = ContentType.getContentType(uri);
+		} catch (IllegalArgumentException e) {
+			Logger.error(this, "Unallowed content type for file '" + uriAsString + "'. Only Javascript and CSS is allowed.");
+			response.sendError(400);
+			return;
+		}
+
+		String fileContent;
+		try {
+			fileContent = getFileContent(uri, host, isLiveMode);
+		} catch (DotCMSFileNotFoundException e) {
+			Logger.error(this, "Cannot find file '" + uriAsString + "' on host '" + hostname + "'");
+			response.sendError(404);
+			return;
+		}
 
 		response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 		response.addHeader("Pragma", "no-cache");

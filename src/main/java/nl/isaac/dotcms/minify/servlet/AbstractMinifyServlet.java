@@ -49,7 +49,7 @@ public class AbstractMinifyServlet extends HttpServlet {
 					return ct;
 				}
 			}
-			throw new RuntimeException("Cannot determine contentType from URI " + uri);
+			throw new IllegalArgumentException("Cannot determine contentType from URI " + uri);
 		}
 
 	}
