@@ -1,16 +1,17 @@
 package nl.isaac.dotcms.minify.osgi;
 
+import com.dotcms.repackage.org.osgi.framework.BundleContext;
+import com.dotmarketing.filters.CMSFilter;
+
 import nl.isaac.dotcms.minify.FileChangedPostHook;
 import nl.isaac.dotcms.minify.MinifyCacheHandler;
+import nl.isaac.dotcms.minify.servlet.MinifyDebugServlet;
 import nl.isaac.dotcms.minify.servlet.MinifyServlet;
 import nl.isaac.dotcms.minify.viewtool.AbstractMinifyViewTool;
 import nl.isaac.dotcms.minify.viewtool.CssMinifyViewTool;
 import nl.isaac.dotcms.minify.viewtool.JsMinifyViewTool;
 import nl.isaac.dotcms.util.osgi.ExtendedGenericBundleActivator;
 import nl.isaac.dotcms.util.osgi.ViewToolScope;
-
-import com.dotcms.repackage.org.osgi.framework.BundleContext;
-import com.dotmarketing.filters.CMSFilter;
 
 public class MinifierActivator extends ExtendedGenericBundleActivator {
 
@@ -27,6 +28,7 @@ public class MinifierActivator extends ExtendedGenericBundleActivator {
 
 		// Register the servlet
 		addServlet(context, MinifyServlet.class, "/servlets/MinifyServlet");
+		addServlet(context, MinifyDebugServlet.class, "/service/minifier/raw");
 
 		final String filterPattern = ".*\\" + AbstractMinifyViewTool.FILTER_PATTERN + "(j|cs)s$";
 		addRewriteRule(filterPattern, "/app/servlets/MinifyServlet", "forward", "MinifyServletRedirectFilter");
@@ -34,7 +36,7 @@ public class MinifierActivator extends ExtendedGenericBundleActivator {
 
 		CMSFilter.excludeURI( filterPattern);
 	}
-	
+
 
 
 	public void stop(BundleContext context) throws Exception {

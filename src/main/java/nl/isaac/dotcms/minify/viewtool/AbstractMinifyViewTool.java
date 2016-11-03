@@ -23,17 +23,17 @@ import java.util.zip.Adler32;
 
 import javax.servlet.http.HttpServletRequest;
 
-import nl.isaac.dotcms.minify.shared.FileTools;
-import nl.isaac.dotcms.minify.shared.HostTools;
-import nl.isaac.dotcms.minify.util.ParamValidationUtil;
-import nl.isaac.dotcms.minify.util.StringListUtil;
-
 import org.apache.velocity.tools.view.context.ViewContext;
 
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.portlets.fileassets.business.FileAsset;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
+
+import nl.isaac.dotcms.minify.shared.FileTools;
+import nl.isaac.dotcms.minify.shared.HostTools;
+import nl.isaac.dotcms.minify.util.ParamValidationUtil;
+import nl.isaac.dotcms.minify.util.StringListUtil;
 
 /**
  * Abstract class that contains the generic functionality for other Minifier
@@ -62,7 +62,7 @@ public abstract class AbstractMinifyViewTool {
 	 */
 	protected String minifyUrlExtension;
 
-	/**
+/**
 	 * True if the request indicated debug mode, false otherwise
 	 */
 	protected boolean isDebugMode;
@@ -418,12 +418,29 @@ public abstract class AbstractMinifyViewTool {
 		FileAsset firstFileUri = fileAssets.iterator().next();
 		String basePath = firstFileUri.getPath();
 		String fileUrisString = fileAssetsToCsvUris(fileAssets);
-		String debugModeString = isDebugMode ? "&debug=true" : ""; // FIXME: why is this needed?
 		String cacheBuster = createCacheBuster(fileAssets);
 
 		return domain + basePath + cacheBuster + FILTER_PATTERN
-				+ minifyUrlExtension + "?uris=" + fileUrisString
-				+ debugModeString;
+				+ minifyUrlExtension + "?uris=" + fileUrisString;
+	}
+
+	protected String getMinifierDebugUrl(FileAsset fileAsset, Host host, String domain) {
+		ParamValidationUtil.validateParamNotNull(fileAsset, "fileAsset");
+
+		String basePath = fileAsset.getPath();
+		String fullPath = basePath + fileAsset.getFileName();
+
+		if (host != null) {
+			fullPath = "//" + host.getHostname() + fullPath;
+		}
+
+		try {
+			fullPath = URLEncoder.encode(fullPath, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
+
+		return "/app/service/minifier/raw?uri=" + fullPath;
 	}
 
 	/**
@@ -507,8 +524,6 @@ public abstract class AbstractMinifyViewTool {
 	 *            A Set containing string representing paths to files on the
 	 *            given host, eg. "/path/to/file.css". No groups are allowed
 	 *            here.
-	 * @param host
-	 *            The host where the given files can be found.
 	 * @return An Andler32 checksum of all the modDates of the given files.
 	 */
 	private String createCacheBuster(Collection<FileAsset> fileAssets) {

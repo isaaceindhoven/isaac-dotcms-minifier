@@ -121,17 +121,16 @@ public final class JsMinifyViewTool extends AbstractMinifyViewTool implements Vi
 		if (isDebugMode) {
 
 			for (FileAsset file: fileAssets) {
-		    	String fileWithCacheBuster = addCacheBusterToFile(file);
 
 	      		if (UtilMethods.isSet(cookieOptInLevel)) {
 	      			String cleanLevel = UtilMethods.isSet(cookieOptInLevel)? cookieOptInLevel: "";
 	      			result	.append("<script type=\"text/plain\"")
 	      					.append(" data-ics-level=\"").append(cleanLevel).append("\"")
-	      					.append(" data-ics-src=\"").append(cleanDomain).append(fileWithCacheBuster).append("\">")
+	      					.append(" data-ics-src=\"").append(getMinifierDebugUrl(file, host, cleanDomain)).append("\">")
 	      					.append("</script>\n");
 	      		} else {
 	      			result	.append("<script type=\"text/javascript\"")
-		      				.append(" src=\"").append(cleanDomain).append(fileWithCacheBuster).append("\">")
+		      				.append(" src=\"").append(getMinifierDebugUrl(file, host, cleanDomain)).append("\">")
 		      				.append("</script>\n");
 	      		}
 
