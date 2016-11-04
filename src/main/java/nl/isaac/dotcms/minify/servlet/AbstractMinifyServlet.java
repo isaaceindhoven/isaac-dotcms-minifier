@@ -25,7 +25,11 @@ public class AbstractMinifyServlet extends HttpServlet {
 
 	protected enum ContentType {
 		JS("js", "application/javascript;charset=UTF-8")
-		,CSS("css", "text/css;charset=UTF-8");
+		,CSS("css", "text/css;charset=UTF-8")
+		,WOFF2("woff2", "application/font-woff2")
+		,WOFF("woff", "application/font-woff")
+		,TTF("ttf", "application/x-font-truetype")
+		,MAP("map","application/octet-stream");
 
 		private String extension;
 		private String contentTypeString;
@@ -57,7 +61,7 @@ public class AbstractMinifyServlet extends HttpServlet {
 	protected Host getHostOfUri(URI uri, Host defaultHost) {
 
 		// If the URI is absolute we determine the host on its domain. (We don't
-		// use URI's isAbsolute method because it not understand protocol
+		// use URI's isAbsolute method because it doesn't understand protocol
 		// relative URLs.)
 		if (uri.getHost() != null) {
 			return HostTools.getHostByDomainName(uri.getHost());
