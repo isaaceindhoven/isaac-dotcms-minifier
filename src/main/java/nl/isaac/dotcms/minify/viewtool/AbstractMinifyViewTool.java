@@ -23,17 +23,17 @@ import java.util.zip.Adler32;
 
 import javax.servlet.http.HttpServletRequest;
 
-import nl.isaac.dotcms.minify.shared.FileTools;
-import nl.isaac.dotcms.minify.shared.HostTools;
-import nl.isaac.dotcms.minify.util.ParamValidationUtil;
-import nl.isaac.dotcms.minify.util.StringListUtil;
-
 import org.apache.velocity.tools.view.context.ViewContext;
 
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.portlets.fileassets.business.FileAsset;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
+
+import nl.isaac.dotcms.minify.shared.FileTools;
+import nl.isaac.dotcms.minify.shared.HostTools;
+import nl.isaac.dotcms.minify.util.ParamValidationUtil;
+import nl.isaac.dotcms.minify.util.StringListUtil;
 
 /**
  * Abstract class that contains the generic functionality for other Minifier
@@ -62,7 +62,7 @@ public abstract class AbstractMinifyViewTool {
 	 */
 	protected String minifyUrlExtension;
 
-	/**
+/**
 	 * True if the request indicated debug mode, false otherwise
 	 */
 	protected boolean isDebugMode;
@@ -84,6 +84,10 @@ public abstract class AbstractMinifyViewTool {
 	 * can later remove it again so the file can be served.
 	 */
 	public static final String REWRITE_PATTERN = "minifier_rewrite_";
+
+	/** A String that is used in debug mode to retrieve files from another host
+	 */
+	public static final String PROXY_SERVLET_URL = "/app/minifier/proxy/";
 
 
 	// /////////////////
@@ -418,12 +422,45 @@ public abstract class AbstractMinifyViewTool {
 		FileAsset firstFileUri = fileAssets.iterator().next();
 		String basePath = firstFileUri.getPath();
 		String fileUrisString = fileAssetsToCsvUris(fileAssets);
-		String debugModeString = isDebugMode ? "&debug=true" : ""; // FIXME: why is this needed?
 		String cacheBuster = createCacheBuster(fileAssets);
 
 		return domain + basePath + cacheBuster + FILTER_PATTERN
-				+ minifyUrlExtension + "?uris=" + fileUrisString
-				+ debugModeString;
+				+ minifyUrlExtension + "?uris=" + fileUrisString;
+	}
+
+	protected String getMinifierDebugUrl(FileAsset fileAsset, Host host, String domain) {
+		ParamValidationUtil.validateParamNotNull(fileAsset, "fileAsset");
+
+		String basePath = fileAsset.getPath();
+		String fullPath = basePath + fileAsset.getFileName();
+
+		String debugUrl;
+		if (host == null) {
+
+			// if the file is on the same host, just use the file's URL
+			debugUrl = fullPath;
+
+		} else {
+
+			// if the file is on another host, we have to use a proxy servlet
+			// to get the raw file contents
+
+			String hostname;
+			try {
+				hostname = URLEncoder.encode(host.getHostname(), "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				throw new RuntimeException(e);
+			}
+
+			debugUrl = PROXY_SERVLET_URL + hostname + fullPath;
+		}
+
+		// if needed, set the domain in the debug url
+		if (UtilMethods.isSet(domain)) {
+			debugUrl = "//" + domain + debugUrl;
+		}
+
+		return debugUrl;
 	}
 
 	/**
@@ -507,8 +544,6 @@ public abstract class AbstractMinifyViewTool {
 	 *            A Set containing string representing paths to files on the
 	 *            given host, eg. "/path/to/file.css". No groups are allowed
 	 *            here.
-	 * @param host
-	 *            The host where the given files can be found.
 	 * @return An Andler32 checksum of all the modDates of the given files.
 	 */
 	private String createCacheBuster(Collection<FileAsset> fileAssets) {
