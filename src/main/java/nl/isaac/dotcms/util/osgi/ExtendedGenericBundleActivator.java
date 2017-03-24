@@ -34,9 +34,13 @@ import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
+import org.springframework.web.servlet.DispatcherServlet;
 
 import com.dotcms.repackage.org.apache.commons.lang.Validate;
 import com.dotcms.repackage.org.apache.felix.http.api.ExtHttpService;
+import com.dotcms.repackage.org.apache.logging.log4j.LogManager;
+import com.dotcms.repackage.org.apache.logging.log4j.core.LoggerContext;
+import com.dotcms.repackage.org.osgi.framework.Bundle;
 import com.dotcms.repackage.org.osgi.framework.BundleContext;
 import com.dotcms.repackage.org.osgi.framework.FrameworkUtil;
 import com.dotcms.repackage.org.osgi.framework.ServiceReference;
@@ -46,6 +50,7 @@ import com.dotcms.rest.config.RestServiceUtil;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.CacheLocator;
 import com.dotmarketing.exception.DotDataException;
+import com.dotmarketing.loggers.Log4jUtil;
 import com.dotmarketing.osgi.GenericBundleActivator;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPIPostHook;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPIPreHook;
@@ -65,7 +70,9 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 
     private Scheduler scheduler;
     private Properties schedulerProperties;
-	
+
+    private LoggerContext pluginLoggerContext;
+
 	static {
 		String userDir = System.getProperty( "user.dir" );
 
@@ -80,6 +87,12 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 	@Override
 	protected void initializeServices(BundleContext context) throws Exception {
 		super.initializeServices(context);
+
+		initializeLoggerContext();
+
+		Bundle bundle = FrameworkUtil.getBundle(this.getClass());
+		String servletPath = "/servlets/monitoring/" + bundle.getHeaders().get("Bundle-Name");
+		addServlet(context, MonitoringServlet.class, servletPath);
 
 	}
 
@@ -108,11 +121,11 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 	}
 
 	protected void addServlet(BundleContext context, final Class<? extends Servlet> clazz, final String path) {
-		
+
 		Validate.notNull(clazz, "Servlet class may not be null");
 		Validate.notEmpty(path, "Servlet path may not be null");
 		Validate.isTrue(path.startsWith("/"), "Servlet path must start with a /");
-		
+
 		final Servlet servlet;
 		try {
 			servlet = clazz.newInstance();
@@ -122,7 +135,7 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 			throw new RuntimeException(e);
 		}
 
-		Logger.info(this, "Registering Servlet " + servlet.getClass().getSimpleName());
+		Logger.info(this, "Registering Servlet " + servlet.getClass().getSimpleName() + " on /app" + path);
 
 		addServlet(context, servlet, path, false);
 	}
@@ -134,7 +147,7 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 		ServiceTracker<ExtHttpService, ExtHttpService> tracker = new ServiceTracker<ExtHttpService, ExtHttpService>(context, ExtHttpService.class, null) {
 			@Override public ExtHttpService addingService(ServiceReference<ExtHttpService> reference) {
 				ExtHttpService extHttpService = super.addingService(reference);
-				
+
 				try {
 					if(handleBundleServices) {
 						publishBundleServices(context);
@@ -165,7 +178,7 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 		tracker.open();
 
 	}
-	
+
 	protected void addFilter(BundleContext context, final Class <? extends Filter> clazz, final String regex) {
 		Validate.notNull(clazz, "Filter class may not be null");
 		Validate.notEmpty(regex, "Filter regex may not be null");
@@ -202,7 +215,7 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 		tracker.open();
 		this.trackers.add(tracker);
 	}
-		
+
 	protected void addMacros(BundleContext context) {
 		Logger.info(this, "Registering macros");
 
@@ -277,7 +290,7 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 	protected void addPreHook(BundleContext context, Class <? extends ContentletAPIPreHook> clazz) {
 		Logger.info(this, "Registering PreHook " + clazz.getSimpleName());
 		try {
-			addPreHook(clazz.newInstance());
+			super.addPreHook(clazz.newInstance());
 		} catch (InstantiationException e) {
 			throw new RuntimeException(e);
 		} catch (IllegalAccessException e) {
@@ -290,7 +303,7 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 	protected void addPostHook(BundleContext context, Class <? extends ContentletAPIPostHook> clazz) {
 		Logger.info(this, "Registering PostHook " + clazz.getSimpleName());
 		try {
-			addPostHook(clazz.newInstance());
+			super.addPostHook(clazz.newInstance());
 		} catch (InstantiationException e) {
 			throw new RuntimeException(e);
 		} catch (IllegalAccessException e) {
@@ -299,6 +312,43 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 			throw new RuntimeException(e);
 		}
 	}
+	/**
+	 * @deprecated Use {@link #addPostHook(BundleContext, Class)}
+	 * @param posthook Must be an instance!
+	 * @throws Exception 
+	 */
+	@Deprecated
+	protected void addPostHook(Object posthook) throws Exception {
+		super.addPostHook(posthook);
+	}
+	/**
+	 * @deprecated Use {@link #addPostHook(BundleContext, Class)}
+	 * @param posthook Must be an instance!
+	 * @throws Exception 
+	 */
+	@Deprecated
+	protected void addPostHook(Class<? extends ContentletAPIPostHook> posthook) throws Exception {
+		addPostHook(null, posthook);
+	}
+	/**
+	 * @deprecated Use {@link #addPreHook(BundleContext, Class)}
+	 * @param prehook Must be an instance!
+	 * @throws Exception 
+	 */
+	@Deprecated
+	protected void addPreHook(Object prehook) throws Exception {
+		super.addPreHook(prehook);
+	}
+	/**
+	 * @deprecated Use {@link #addPreHook(BundleContext, Class)}
+	 * @param prehook Must be an instance!
+	 * @throws Exception 
+	 */
+	@Deprecated
+	protected void addPreHook(Class<? extends ContentletAPIPreHook> prehook) throws Exception {
+		addPreHook(null, prehook);
+	}
+
 
 	protected void addRestService(BundleContext context, final Class<? extends WebResource> clazz) {
 		Logger.info(this, "Registering REST service " + clazz.getSimpleName());
@@ -318,8 +368,8 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 		tracker.open();
 		this.trackers.add(tracker);
 	}
-	
-	
+
+
 
 	protected void addPortlets(BundleContext context) {
 		if(languageVariablesNotAdded) {
@@ -356,6 +406,21 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 		CacheLocator.getVeloctyResourceCache().clearCache();
 	}
 
+	protected void addSpringController(BundleContext context, String path, String contextConfigLocation) {
+		Logger.info(this, "Registering spring controller " + contextConfigLocation);
+
+		try {
+			publishBundleServices(context);
+		} catch (Exception e) {
+			Logger.warn(this, "Unable to publish bundle services", e);
+		}
+
+		DispatcherServlet dispatcherServlet = new DispatcherServlet();
+		dispatcherServlet.setContextConfigLocation(contextConfigLocation);
+
+		addServlet(context, dispatcherServlet, path, true);
+	}
+
 	/**
 	 * Set the properties that the org.quartz Scheduler will use. Can only be called once, and only before
 	 * a Job is added.
@@ -364,13 +429,13 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 		if(this.schedulerProperties != null) {
 			throw new IllegalStateException("Can't overwrite scheduler properties when they are already set. Set the properties before adding Jobs, and do not change them afterwards.");
 		}
-		
+
 		this.schedulerProperties = properties;
 	}
-	
+
 	protected Properties getDefaultSchedulerProperties() {
         Properties properties = new Properties();
-        
+
         //Default properties, retrieved from a quartz.properties file
         //We only changed the threadcount to 1
         properties.setProperty("org.quartz.scheduler.instanceName", "DefaultQuartzScheduler");
@@ -383,10 +448,10 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
         properties.setProperty("org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread", "true");
         properties.setProperty("org.quartz.jobStore.misfireThreshold", "60000");
         properties.setProperty("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
-		
+
         return properties;
 	}
-	
+
 	/**
 	 * Adds a Job, and starts a Scheduler when none was yet started
 	 */
@@ -397,10 +462,10 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
         job.setDurability(false);
         job.setVolatility(true);
         job.setDescription(jobName);
-        
+
         try {
 	        CronTrigger trigger = new CronTrigger(jobName, jobGroup, cronExpression);
-	        
+
 	        if(scheduler == null) {
 	        	if(schedulerProperties == null) {
 	        		schedulerProperties = getDefaultSchedulerProperties();
@@ -408,18 +473,18 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 	        	scheduler = new StdSchedulerFactory(schedulerProperties).getScheduler();
 				scheduler.start();
 	        }
-	        
+
 			Date date = scheduler.scheduleJob(job, trigger);
-			
+
 			Logger.info(this, "Scheduled job " + jobName + ", next trigger is on " + date);
-			
+
         } catch (ParseException e) {
         	Logger.error(this, "Cron expression '" + cronExpression + "' has an exception. Throwing IllegalArgumentException", e);
         	throw new IllegalArgumentException(e);
         } catch (SchedulerException e) {
         	Logger.error(this, "Unable to schedule job " + jobName, e);
 		}
-		
+
 	}
 
 	@Override
@@ -431,8 +496,10 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 			scheduler = null;
 			schedulerProperties = null;
 		}
+
+		closeLoggerContext();
 	}
-	
+
 	/**
 	 * Removes Dotcms services that are tracked by the ExtendedGenericBundleActivator. These are
 	 * services that require more than just a simple register/unregister. For instance Servlets and Filters.
@@ -561,5 +628,29 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
 				out.close();
 			}
 		}
+	}
+
+	/**
+	 * https://dotcms.com/docs/latest/osgi-dynamic-plugin-logging
+	 */
+	private void initializeLoggerContext() {
+		//Initializing log4j...
+        LoggerContext dotcmsLoggerContext = Log4jUtil.getLoggerContext();
+
+        if (dotcmsLoggerContext != null) {
+
+        	//Initialing the log4j context of this plugin based on the dotCMS logger context
+        	pluginLoggerContext = (LoggerContext) LogManager.getContext(this.getClass().getClassLoader(),
+        			false,
+        			dotcmsLoggerContext,
+        			dotcmsLoggerContext.getConfigLocation());
+        }
+
+	}
+
+	private void closeLoggerContext() {
+        if (pluginLoggerContext != null) {
+        	Log4jUtil.shutdown(pluginLoggerContext);
+        }
 	}
 }
