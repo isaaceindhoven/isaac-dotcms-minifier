@@ -152,11 +152,15 @@ public final class JsMinifyViewTool extends AbstractMinifyViewTool implements Vi
 		    	String cleanLevel = UtilMethods.isSet(cookieOptInLevel)? cookieOptInLevel: "";
       			result	.append("<script type=\"text/plain\"")
 		      			.append(" data-ics-level=\"").append(cleanLevel).append("\"")
-		      			.append(" data-ics-src=\"").append(getMinifierUrl(fileAssets, cleanDomain)).append("\">")
+		      			.append(" data-ics-src=\"").append(getMinifierUrl(fileAssets, cleanDomain)).append("\" ")
+      					.append(extraAttributes)
+      					.append(">")
 		      			.append("</script>");
 		    } else {
 		    	result	.append("<script type=\"text/javascript\"")
-				    	.append(" src=\"").append(getMinifierUrl(fileAssets, cleanDomain)).append( "\">")
+				    	.append(" src=\"").append(getMinifierUrl(fileAssets, cleanDomain)).append( "\" ")
+      					.append(extraAttributes)
+      					.append(">")
 				    	.append("</script>");
 		    }
 		}
