@@ -65,6 +65,11 @@ public final class JsMinifyViewTool extends AbstractMinifyViewTool implements Vi
 	 *            (Optional) the cookie acceptance level that these JS files
 	 *            require to run. Use null or "" to skip this parameter.
 	 *
+	 * @param extraAttributes
+	 *            (Optional) extra attributes/HTML that you can add to the generated
+	 *            SCRIPT tag. Examples of these are "defer" and "async". Use ""
+	 *            to skip this parameter.
+	 *
 	 * @return <p>
 	 *         If not in debug mode: one HTML script tag that links to the
 	 *         minify servlet that will combine and minify the JS files in
@@ -108,7 +113,7 @@ public final class JsMinifyViewTool extends AbstractMinifyViewTool implements Vi
 	 *         different folders.
 	 *
 	 */
-	public String toScriptTag(String filesOrGroups, String domain, Host host, String cookieOptInLevel) {
+	public String toScriptTag(String filesOrGroups, String domain, Host host, String cookieOptInLevel, String extraAttributes) {
 
 		Host cleanHost = UtilMethods.isSet(host)? host: currentHost;
 		Set<FileAsset> fileAssets = getFileUriSet(filesOrGroups, cleanHost);
@@ -129,14 +134,17 @@ public final class JsMinifyViewTool extends AbstractMinifyViewTool implements Vi
 	      			String cleanLevel = UtilMethods.isSet(cookieOptInLevel)? cookieOptInLevel: "";
 	      			result	.append("<script type=\"text/plain\"")
 	      					.append(" data-ics-level=\"").append(cleanLevel).append("\"")
-	      					.append(" data-ics-src=\"").append(getMinifierDebugUrl(file, host, cleanDomain)).append("\">")
+	      					.append(" data-ics-src=\"").append(getMinifierDebugUrl(file, host, cleanDomain)).append("\" ")
+	      					.append(extraAttributes)
+	      					.append(">")
 	      					.append("</script>\n");
 	      		} else {
 	      			result	.append("<script type=\"text/javascript\"")
-		      				.append(" src=\"").append(getMinifierDebugUrl(file, host, cleanDomain)).append("\">")
+		      				.append(" src=\"").append(getMinifierDebugUrl(file, host, cleanDomain)).append("\" ")
+	      					.append(extraAttributes)
+	      					.append(">")
 		      				.append("</script>\n");
 	      		}
-
 	      	}
 		} else {
 
@@ -158,76 +166,102 @@ public final class JsMinifyViewTool extends AbstractMinifyViewTool implements Vi
 
 	/**
 	 * Convenience method with the same functionality as
-	 * {@link #toScriptTag(String, String, String, Host)}, but with
+	 * {@link #toScriptTag(String, String, Host, String, String)}, but with
 	 * domain, host and cookieOptInLevel defaulted to null.
 	 */
 	public String toScriptTag(String filesOrGroups) {
-		return toScriptTag(filesOrGroups, null, null, null);
+		return toScriptTag(filesOrGroups, null, null, null, "");
 	}
 
 	/**
 	 * Convenience method with the same functionality as
-	 * {@link #toScriptTag(String, String, String, Host)}, but with
+	 * {@link #toScriptTag(String)}, but with extraAttributes added.
+	 */
+	public String toCustomScriptTag(String filesOrGroups, String extraAttributes) {
+		return toScriptTag(filesOrGroups, null, null, null, extraAttributes);
+	}
+
+	/**
+	 * Convenience method with the same functionality as
+	 * {@link #toScriptTag(String, String, Host, String, String)}, but with
 	 * host and  cookieOptInLevel defaulted to null.
 	 */
 	public String toScriptTag(String filesOrGroups, String domain) {
-		return toScriptTag(filesOrGroups, domain, null, null);
+		return toScriptTag(filesOrGroups, domain, null, null, "");
 	}
 
 	/**
 	 * Convenience method with the same functionality as
-	 * {@link #toScriptTag(String, String, String, Host)}, but with
+	 * {@link #toScriptTag(String, String)}, but with
+	 * extraAttributes added.
+	 */
+	public String toCustomScriptTag(String filesOrGroups, String domain, String extraAttributes) {
+		return toScriptTag(filesOrGroups, domain, null, null, extraAttributes);
+	}
+
+	/**
+	 * Convenience method with the same functionality as
+	 * {@link #toScriptTag(String, String, Host, String, String)}, but with
 	 * domain and cookieOptInLevel defaulted to null.
 	 */
 	public String toScriptTag(String filesOrGroups, Host host) {
-		return toScriptTag(filesOrGroups, null, host, null);
+		return toScriptTag(filesOrGroups, null, host, null, "");
+	}
+
+	/**
+	 * Convenience method with the same functionality as
+	 * {@link #toScriptTag(String, Host)}, but with
+	 * extraAttributes added.
+	 */
+	public String toCustomScriptTag(String filesOrGroups, Host host, String extraAttributes) {
+		return toScriptTag(filesOrGroups, null, host, null, extraAttributes);
 	}
 
 	public String testWhitespaceJsMinifier() {
 		MinifierAPI minAPI = new MinifierAPI();
-		
+
 		String whiteSpaceMinifiedJs1 = minAPI.getMinifiedJavascript(getJs1(), CompilationLevel.WHITESPACE_ONLY);
 		String whiteSpaceMinifiedJs2 = minAPI.getMinifiedJavascript(getJs2(), CompilationLevel.WHITESPACE_ONLY);
-		String actualWhiteSpaceMinifiedJs = whiteSpaceMinifiedJs1 + whiteSpaceMinifiedJs2; 
+		String actualWhiteSpaceMinifiedJs = whiteSpaceMinifiedJs1 + whiteSpaceMinifiedJs2;
 		String expectedWhiteSpaceMinifiedJs = "var unusedVar;function helloWorld(){alert(\"Hello World!\")}helloWorld();function append(string,append){console.log(string+append)};";
-		
+
 		if (actualWhiteSpaceMinifiedJs.equals(expectedWhiteSpaceMinifiedJs)) {
 			return actualWhiteSpaceMinifiedJs;
 		}
-		
+
 		return null;
 	}
-	
+
 	public String testSimpleJsMinifier() {
 		MinifierAPI minAPI = new MinifierAPI();
-		
+
 		String simpleMinifiedJs1 = minAPI.getMinifiedJavascript(getJs1(), CompilationLevel.SIMPLE_OPTIMIZATIONS);
 		String simpleMinifiedJs2 = minAPI.getMinifiedJavascript(getJs2(), CompilationLevel.SIMPLE_OPTIMIZATIONS);
-		String actualSimpleMinifiedJs = simpleMinifiedJs1 + simpleMinifiedJs2; 
+		String actualSimpleMinifiedJs = simpleMinifiedJs1 + simpleMinifiedJs2;
 		String expectedSimpleMinifiedJs = "var unusedVar;function helloWorld(){alert(\"Hello World!\")}helloWorld();function append(a,b){console.log(a+b)};";
-		
+
 		if (actualSimpleMinifiedJs.equals(expectedSimpleMinifiedJs)) {
 			return actualSimpleMinifiedJs;
 		}
-		
+
 		return null;
 	}
-	
+
 	public String testAdvancedJsMinifier() {
 		MinifierAPI minAPI = new MinifierAPI();
 
 		String advancedMinifiedJs1 = minAPI.getMinifiedJavascript(getJs1(), CompilationLevel.ADVANCED_OPTIMIZATIONS);
 		String advancedMinifiedJs2 = minAPI.getMinifiedJavascript(getJs2(), CompilationLevel.ADVANCED_OPTIMIZATIONS);
-		String actualAdvancedMinifiedJs = advancedMinifiedJs1 + advancedMinifiedJs2; 
+		String actualAdvancedMinifiedJs = advancedMinifiedJs1 + advancedMinifiedJs2;
 		String expectedAdvancedMinifiedJs = "alert(\"Hello World!\");";
-		
+
 		if (actualAdvancedMinifiedJs.equals(expectedAdvancedMinifiedJs)) {
 			return actualAdvancedMinifiedJs;
 		}
-		
+
 		return null;
 	}
-	
+
 	private String getJs1() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("var unusedVar;");
@@ -237,7 +271,7 @@ public final class JsMinifyViewTool extends AbstractMinifyViewTool implements Vi
 		sb.append("\n\n\thelloWorld();");
 		return sb.toString();
 	}
-	
+
 	private String getJs2() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("function append(string, append) {");

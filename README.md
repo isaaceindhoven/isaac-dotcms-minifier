@@ -137,7 +137,15 @@ $jsMinifyTool.toScriptTag("/path/to/otherFile.js, groupName", $anotherHost)
 <script src="/path/to/25963026436.minifier.js?uris=//anotherHost/path/to/otherFile.js,/path/to/file.js,//someHost/some/path/to/a/file.js"></script>
 ```
 
-Notice the order in which the viewtool adds the files to the servket call: the order in the .toScriptTag() call is leading. For security reasons you can only add files located on one of the hosts that are hosted on the same dotCMS server as the current host. Notice also that the methods expect a Host object and not a string, so to make it easy to retrieve the host the plugin provides a utility method: $jsMinifyTool.getHost("hostName or Alias"). The CSS case works the same but uses the $cssMinifyTool viewtool instead.
+Notice the order in which the viewtool adds the files to the servlet call: the order in the .toScriptTag() call is leading. For security reasons you can only add files located on one of the hosts that are hosted on the same dotCMS server as the current host. Notice also that the methods expect a Host object and not a string, so to make it easy to retrieve the host the plugin provides a utility method: $jsMinifyTool.getHost("hostName or Alias"). The CSS case works the same but uses the $cssMinifyTool viewtool instead.
+
+## Add custom attributes to the generated script tag
+
+If you want to make your script 'async' or 'defer', you have the option (since version 3.7.1) to use the to**Custom**ScriptTag:
+
+$jsMinifyTool.toCustomScriptTag("groupName", "defer")
+
+Since the extra string is added to the HTML this can be used to add "async", "defer", "defer async" and even "charset='UTF-8'".
 
 #### Adding inline JavaScript and CSS
 
