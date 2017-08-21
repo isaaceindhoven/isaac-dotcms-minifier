@@ -1,21 +1,34 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	
 	<groupId>nl.isaac.dotcms.plugin.minifier</groupId>
 	<artifactId>isaac-dotcms-minifier</artifactId>
-	<version>3.7.1</version>
-	<packaging>bundle</packaging>
+	<version>4.1.1-1</version>
+	<packaging>pom</packaging>
+	
+	<name>ISAAC dotCMS Minifier Parent</name>
+	
+	<modules>
+		<module>isaac-dotcms-minifier-core</module>
+		<module>isaac-dotcms-minifier-static</module>
+		<module>isaac-dotcms-minifier-dynamic</module>
+	</modules>
+	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
+	
 	<prerequisites>
 		<maven>3.0</maven>
 	</prerequisites>
+	
 	<organization>
 		<name>ISAAC Software Solutions</name>
 		<url>http://www.isaac.nl</url>
 	</organization>
+	
 	<repositories>
 		<repository>
 			<id>dotcms</id>
@@ -29,55 +42,26 @@
 			</snapshots>
 		</repository>
 	</repositories>
+
 	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.6.1</version>
-					<configuration>
-						<source>1.8</source>
-						<target>1.8</target>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<version>3.2.0</version>
-				<extensions>true</extensions>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.6.1</version>
 				<configuration>
-					<instructions>
-						<Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-						<Bundle-Name>${project.artifactId}</Bundle-Name>
-						<Bundle-Version>${project.version}</Bundle-Version>
-						<Bundle-Activator>nl.isaac.dotcms.minify.osgi.MinifierActivator</Bundle-Activator>
-						<Export-Package>nl.isaac.dotcms.minify.viewtool,
-							nl.isaac.dotcms.minify.api,
-							com.google.javascript.jscomp</Export-Package>
-						<Import-Package />
-						<DynamicImport-Package>*</DynamicImport-Package>
-						<Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
-						<Embed-Transitive>true</Embed-Transitive>
-						<Data-Files>conf</Data-Files>
-					</instructions>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+
 	<dependencies>
-		<dependency>
-			<groupId>com.google.javascript</groupId>
-			<artifactId>closure-compiler</artifactId>
-			<version>v20170124</version>
-		</dependency>
 		<dependency>
 			<groupId>com.dotcms</groupId>
 			<artifactId>dotcms</artifactId>
-			<version>3.7.1</version>
+			<version>4.1.1</version>
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
@@ -86,76 +70,11 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<dependency>
-			<groupId>com.dotcms.lib</groupId>
-			<artifactId>dot.commons-io</artifactId>
-			<version>2.0.1_2</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.dotcms.lib</groupId>
-			<artifactId>dot.commons-lang</artifactId>
-			<version>2.4_2</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.dotcms.lib</groupId>
-			<artifactId>dot.felix</artifactId>
-			<version>4.2.1_3</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.dotcms.lib</groupId>
-			<artifactId>dot.urlrewritefilter</artifactId>
-			<version>4.0.3_2</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.dotcms.lib</groupId>
-			<artifactId>dot.org.apache.felix.http.bundle</artifactId>
-			<version>2.2.0_3</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.dotcms.lib</groupId>
-			<artifactId>dot.portlet</artifactId>
-			<version>1.0_2</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.quartz-scheduler</groupId>
-			<version>1.8.6</version>
-			<artifactId>quartz</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.dotcms.lib</groupId>
-			<artifactId>dot.log4j-api</artifactId>
-			<version>2.3_1</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.dotcms.lib</groupId>
-			<artifactId>dot.log4j-core</artifactId>
-			<version>2.3_2</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-webmvc</artifactId>
-			<version>3.1.0.RELEASE</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>commons-logging</artifactId>
-					<groupId>commons-logging</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.google.javascript</groupId> -->
+<!-- 			<artifactId>closure-compiler</artifactId> -->
+<!-- 			<version>v20170806</version> -->
+<!-- 		</dependency> -->
 	</dependencies>
+	
 </project>

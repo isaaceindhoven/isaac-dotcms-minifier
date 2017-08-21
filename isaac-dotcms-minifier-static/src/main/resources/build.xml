@@ -1,0 +1,3 @@
+<project name="${artifactId}" default="build">	
+	<import file="../common.xml"/>	
+</project>

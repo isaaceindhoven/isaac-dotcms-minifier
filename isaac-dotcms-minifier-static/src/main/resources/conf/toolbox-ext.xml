@@ -1,0 +1,12 @@
+
+	<tool>
+		<key>cssMinifyTool</key>
+		<scope>request</scope>
+		<class>nl.isaac.dotcms.minify.viewtool.CssMinifyViewTool</class>
+	</tool>
+	
+	<tool>
+		<key>jsMinifyTool</key>
+		<scope>request</scope>
+		<class>nl.isaac.dotcms.minify.viewtool.JsMinifyViewTool</class>
+	</tool>

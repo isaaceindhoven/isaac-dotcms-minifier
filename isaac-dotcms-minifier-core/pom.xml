@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>nl.isaac.dotcms.plugin.minifier</groupId>
+		<artifactId>isaac-dotcms-minifier</artifactId>
+		<version>4.1.1-1</version>
+	</parent>
+	
+	<artifactId>isaac-dotcms-minifier-core</artifactId>
+	<packaging>jar</packaging>
+	
+	<name>ISAAC dotCMS Minifier Core</name>
+	
+	<dependencies>
+		<!-- Works for static plugin -->
+		<!-- Test for dynamic plugin -->
+		<dependency>
+			<groupId>com.google.javascript</groupId>
+			<artifactId>closure-compiler</artifactId>
+			<version>v20170806</version>
+			<exclusions>
+				<exclusion>
+					<groupId>args4j</groupId>
+					<artifactId>args4j</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.google.javascript</groupId>
+					<artifactId>closure-compiler-externs</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.google.errorprone</groupId>
+					<artifactId>error_prone_annotations</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>guava</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.google.code.findbugs</groupId>
+					<artifactId>jsr305</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.google.protobuf</groupId>
+					<artifactId>protobuf-java</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.google.jsinterop</groupId>
+					<artifactId>jsinterop-annotations</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	</dependencies>
+	
+</project>

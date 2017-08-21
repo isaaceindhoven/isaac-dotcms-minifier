@@ -1,0 +1,22 @@
+<filter>
+	<filter-name>MinifyServletRedirectFilter</filter-name>
+	<filter-class>nl.isaac.dotcms.minify.filter.MinifyServletRedirectFilter</filter-class>
+	<async-supported>true</async-supported>
+</filter>
+
+<filter-mapping>
+	<filter-name>MinifyServletRedirectFilter</filter-name>
+	<url-pattern>/*</url-pattern>
+</filter-mapping>
+
+<servlet>
+	<description></description>
+	<display-name>MinifyServlet</display-name>
+	<servlet-name>MinifyServlet</servlet-name>
+	<servlet-class>nl.isaac.dotcms.minify.servlet.MinifyServlet</servlet-class>
+</servlet>
+
+<servlet-mapping>
+	<servlet-name>MinifyServlet</servlet-name>
+	<url-pattern>/servlets/MinifyServlet</url-pattern>
+</servlet-mapping>
