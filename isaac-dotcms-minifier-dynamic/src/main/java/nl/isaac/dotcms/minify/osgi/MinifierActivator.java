@@ -2,8 +2,6 @@ package nl.isaac.dotcms.minify.osgi;
 
 import org.osgi.framework.BundleContext;
 
-import com.dotmarketing.filters.CMSFilter;
-
 import nl.isaac.dotcms.minify.FileChangedPostHook;
 import nl.isaac.dotcms.minify.MinifyCacheHandler;
 import nl.isaac.dotcms.minify.servlet.MinifyProxyServlet;
@@ -38,8 +36,6 @@ public class MinifierActivator extends ExtendedGenericBundleActivator {
 		addRewriteRule(filterPattern, "/app/servlets/MinifyServlet", "forward", "MinifyServletRedirectFilter");
 		addRewriteRule(debugFilterPattern, "/app/servlets/MinifyProxyServlet?host=$1&uri=$2", "forward", "MinifyProxyServletRedirectFilter");
 		addRewriteRule("^/servlets/MinifyServlet$", "/app/servlets/MinifyServlet", "forward", "MinifyServletBackwardsCompatiblity");
-
-		CMSFilter.excludeURI( filterPattern);
 	}
 
 	@Override

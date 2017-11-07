@@ -1,6 +1,5 @@
 package nl.isaac.dotcms.minify.servlet;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -71,13 +70,13 @@ public class AbstractMinifyServlet extends HttpServlet {
 		return defaultHost;
 	}
 
-	protected String getFileContent(URI uri, Host host, boolean isLiveMode) throws DotCMSFileNotFoundException {
+	protected String getFileContent(URI uri, Host host, boolean isLiveMode) {
 		FileAsset file = FileTools.getFileAssetByURI(uri.getPath().toString(), host, isLiveMode);
 
 		try {
 			if (file != null && file.getURI() != null) {
 				StringWriter stringWriter = new StringWriter();
-				InputStream input = file.getFileInputStream();
+				InputStream input = file.getInputStream();
 				try {
 					IOUtils.copy(input, stringWriter);
 				} finally {
@@ -85,11 +84,7 @@ public class AbstractMinifyServlet extends HttpServlet {
 				}
 				return stringWriter.toString();
 			}
-		} catch (FileNotFoundException e) {
-			Logger.error(AbstractMinifyServlet.class, "Could not find file", e);
-		} catch (IOException e) {
-			Logger.error(AbstractMinifyServlet.class, "Could not find file", e);
-		} catch (DotDataException e) {
+		} catch (IOException | DotDataException e) {
 			Logger.error(AbstractMinifyServlet.class, "Could not find file", e);
 		}
 		throw new DotCMSFileNotFoundException("Could not find " + (isLiveMode? "live": "working") + " file '" + uri.toString() + "' on host '" + host.getHostname() + "'.");

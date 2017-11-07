@@ -133,7 +133,7 @@ public enum MinifyCacheHandler {
 		String result = null;
 		FileAsset file = getFile(key);
 
-		try (InputStream input = file.getFileInputStream()) {
+		try (InputStream input = file.getInputStream()) {
 
 			if (file.getFileName().contains(".min") || file.getFileName().equalsIgnoreCase("jquery.js")) {
 				Logger.debug(MinifyCacheHandler.class, "Skipping minification of file: " +  key.toString() + ". Filename contains '.min' or is 'jquery.js', so " +
@@ -173,7 +173,7 @@ public enum MinifyCacheHandler {
 		if (result == null || result.trim().isEmpty()) {
 			Logger.debug(MinifyCacheHandler.class, "Nothing was minified, so using raw file: " + key.toString());
 			try {
-				InputStream is = file.getFileInputStream();
+				InputStream is = file.getInputStream();
 				try {
 					byte[] byteArray = IOUtils.toByteArray(is);
 					result = new String(byteArray, "UTF-8");
