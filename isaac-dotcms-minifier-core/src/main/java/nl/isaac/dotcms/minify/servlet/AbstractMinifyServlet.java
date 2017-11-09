@@ -76,7 +76,7 @@ public class AbstractMinifyServlet extends HttpServlet {
 		try {
 			if (file != null && file.getURI() != null) {
 				StringWriter stringWriter = new StringWriter();
-				InputStream input = file.getInputStream();
+				InputStream input = file.getFileInputStream();
 				try {
 					IOUtils.copy(input, stringWriter);
 				} finally {
