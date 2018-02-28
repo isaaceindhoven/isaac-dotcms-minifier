@@ -11,21 +11,21 @@
 
 	<fileSets>
 		<fileSet>
-			<directory>../isaac-dotcms-minifier-core/src/main/java/</directory>
-			<outputDirectory>/${artifactId}/src/</outputDirectory>
+			<directory>${basedir}/../isaac-dotcms-minifier-core/src/main/java/</directory>
+			<outputDirectory>${artifactId}/src/</outputDirectory>
 		</fileSet>
 		<fileSet>
-			<directory>/src/main/java/</directory>
-			<outputDirectory>/${artifactId}/src/</outputDirectory>
+			<directory>${basedir}/src/main/java/</directory>
+			<outputDirectory>${artifactId}/src/</outputDirectory>
 		</fileSet>
 		<fileSet>
-			<directory>/src/main/resources/</directory>
-			<outputDirectory>/${artifactId}/</outputDirectory>
+			<directory>${basedir}/src/main/resources/</directory>
+			<outputDirectory>${artifactId}/</outputDirectory>
 			<filtered>true</filtered>
 		</fileSet>
 		<fileSet>
-			<directory>/target/lib</directory>
-			<outputDirectory>/${artifactId}/lib</outputDirectory>
+			<directory>${project.build.directory}/lib</directory>
+			<outputDirectory>${artifactId}/lib</outputDirectory>
 		</fileSet>
 	</fileSets>
 </assembly>
