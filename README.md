@@ -14,30 +14,18 @@ Previous releases of this plugin for older dotCMS versions can be found [here](.
 
 ## Installation
 
-To use it, you obviously first need to install the plugin. Here's how you do that:
+To use it, you obviously first need to install the plugin. In the latest dotCMS version the dynamic OSGi plugin doesn't work, so you'll need 
+to install the static plugin (isaac-dotcms-minifier-static). Here's how you do that:
 
 * Clone this repository.
 * Open the console and go the the folder containing pom.xml
 * Execute the following maven command: **mvn clean package**
-* The build should succeed and a folder named "target" will be created.
-* Open the "target" folder and check if the **.jar** file exists.
-* Open dotCMS and go to the dotCMS Dynamic Plugins page by navigating to "System" > "Dynamic Plugins".
-* Click on "Exported Packages" and add these packages to the list (make sure to add a comma to the last package in the existing list):
-
-```java
-com.dotmarketing.osgi,
-com.dotmarketing.beans,
-com.dotmarketing.plugin.business,
-com.dotmarketing.portlets.fileassets.business,
-com.dotmarketing.portlets.languagesmanager.business,
-com.dotmarketing.portlets.languagesmanager.model,
-com.liferay.portal
-```
-
-* Click on "Save Packages".
-* Click on "Upload Plugin" and select the .jar file located in the "/target" folder.
-* Click on "Upload Plugin" and the plugin should install and automatically start.
-* To check if the plugin is working, visit the following URL and replace **your-url-here** with your own site address: **http://your-url-here/app/servlets/monitoring/isaac-dotcms-minifier**
+* The build should succeed and a folder named "target" will be created in the isaac-dotcms-minifier-static directory.
+* Open the "target" folder and check if the **.zip** file exists.
+* Unzip the zip file in the dotcms-plugins folder
+* Stop dotCMS
+* Run bin/deploy-plugins.bat or bin/deploy-plugins.sh
+* Start dotCMS
 
 That's it, you've installed the plugin. The plugin exposes two viewtools: **$jsMinifyTool** and **$cssMinifyTool** for working with JavaScript and CSS files respectively. In the [API](#api) section you can find all the details, but you can also read along to get a more step by step explanation of all its features.
 
