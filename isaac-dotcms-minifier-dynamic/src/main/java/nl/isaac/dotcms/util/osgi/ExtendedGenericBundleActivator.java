@@ -26,7 +26,10 @@ import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.felix.http.api.ExtHttpService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.tools.view.context.ViewContext;
 import org.osgi.framework.Bundle;
@@ -42,9 +45,6 @@ import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.web.servlet.DispatcherServlet;
 
-import com.dotcms.repackage.org.apache.commons.lang.Validate;
-import com.dotcms.repackage.org.apache.logging.log4j.LogManager;
-import com.dotcms.repackage.org.apache.logging.log4j.core.LoggerContext;
 import com.dotcms.rest.WebResource;
 import com.dotcms.rest.config.RestServiceUtil;
 import com.dotmarketing.business.APILocator;

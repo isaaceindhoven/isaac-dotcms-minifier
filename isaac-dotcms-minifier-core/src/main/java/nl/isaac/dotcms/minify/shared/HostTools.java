@@ -16,6 +16,7 @@ import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.web.WebAPILocator;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
+import com.dotmarketing.util.PageMode;
 import com.liferay.portal.PortalException;
 import com.liferay.portal.SystemException;
 
@@ -71,18 +72,10 @@ public class HostTools {
 	}
 
 
-	/**
-	 * @return true if the request has been made from the live mode, false
-	 *         otherwise
-	 */
 	public static boolean isLiveMode(HttpServletRequest request) {
-		Object EDIT_MODE_SESSION = request.getSession().getAttribute(com.dotmarketing.util.WebKeys.EDIT_MODE_SESSION);
-		Object PREVIEW_MODE_SESSION = request.getSession().getAttribute(com.dotmarketing.util.WebKeys.PREVIEW_MODE_SESSION);
-		if (EDIT_MODE_SESSION != null) {
-			return !Boolean.valueOf(EDIT_MODE_SESSION.toString());
-		} else if (PREVIEW_MODE_SESSION != null) {
-			return !Boolean.valueOf(PREVIEW_MODE_SESSION.toString());
-		}
-		return true;
+		boolean EDIT_MODE = PageMode.get(request) == PageMode.EDIT_MODE;
+		boolean PREVIEW_MODE = PageMode.get(request) == PageMode.PREVIEW_MODE;
+
+		return !(EDIT_MODE || PREVIEW_MODE);
 	}
 }
