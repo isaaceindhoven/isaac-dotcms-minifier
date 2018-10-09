@@ -35,6 +35,7 @@
 							<overWriteIfNewer>true</overWriteIfNewer>
 							<excludeTransitive>false</excludeTransitive>
 							<excludeScope>provided</excludeScope>
+							<excludeArtifactIds>isaac-dotcms-minifier-core</excludeArtifactIds>
 						</configuration>
 					</execution>
 				</executions>
@@ -71,7 +72,6 @@
 			<groupId>nl.isaac.dotcms.plugin.minifier</groupId>
 			<artifactId>isaac-dotcms-minifier-core</artifactId>
 			<version>${project.version}</version>
-			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 
