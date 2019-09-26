@@ -16,7 +16,21 @@
 	<servlet-class>nl.isaac.dotcms.minify.servlet.MinifyServlet</servlet-class>
 </servlet>
 
+<servlet>
+<description></description>
+<display-name>MinifyProxyServlet</display-name>
+<servlet-name>MinifyProxyServlet</servlet-name>
+<servlet-class>nl.isaac.dotcms.minify.servlet.MinifyProxyServlet</servlet-class>
+</servlet>
 <servlet-mapping>
-	<servlet-name>MinifyServlet</servlet-name>
-	<url-pattern>/servlets/MinifyServlet</url-pattern>
+
+<!-- Can't use /servlets anymore, since dotCMS has a
+     new security filter that blocks access if you're not logged in -->
+<servlet-name>MinifyServlet</servlet-name>
+	<url-pattern>/customservlets/MinifyServlet</url-pattern>
+</servlet-mapping>
+
+<servlet-mapping>
+	<servlet-name>MinifyProxyServlet</servlet-name>
+	<url-pattern>/customservlets/MinifyProxyServlet</url-pattern>
 </servlet-mapping>

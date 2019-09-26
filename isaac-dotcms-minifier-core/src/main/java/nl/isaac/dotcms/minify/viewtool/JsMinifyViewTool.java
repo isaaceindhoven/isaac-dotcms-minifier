@@ -18,7 +18,7 @@ import nl.isaac.dotcms.minify.api.MinifierAPI;
  * @author Koen Peters, ISAAC
  * @author Xander Steinmann, ISAAC
  */
-public final class JsMinifyViewTool extends AbstractMinifyViewTool implements ViewTool {
+public abstract class JsMinifyViewTool extends AbstractMinifyViewTool implements ViewTool {
 
 	@Override
 	public void init(Object initData) {

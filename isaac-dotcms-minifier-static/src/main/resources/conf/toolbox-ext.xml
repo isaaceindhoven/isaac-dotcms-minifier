@@ -2,11 +2,11 @@
 	<tool>
 		<key>cssMinifyTool</key>
 		<scope>request</scope>
-		<class>nl.isaac.dotcms.minify.viewtool.CssMinifyViewTool</class>
+		<class>nl.isaac.dotcms.minify.viewtool.StaticCssMinifyViewTool</class>
 	</tool>
 	
 	<tool>
 		<key>jsMinifyTool</key>
 		<scope>request</scope>
-		<class>nl.isaac.dotcms.minify.viewtool.JsMinifyViewTool</class>
+		<class>nl.isaac.dotcms.minify.viewtool.StaticJsMinifyViewTool</class>
 	</tool>

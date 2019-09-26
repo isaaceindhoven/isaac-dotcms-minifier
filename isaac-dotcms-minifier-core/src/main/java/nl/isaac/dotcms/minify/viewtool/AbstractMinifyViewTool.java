@@ -83,7 +83,7 @@ public abstract class AbstractMinifyViewTool {
 
 	/** A String that is used in debug mode to retrieve files from another host
 	 */
-	public static final String PROXY_SERVLET_URL = "/app/minifier/proxy/";
+	public abstract String getProxyServletUrl(String hostname, String fullPath);
 
 
 	// /////////////////
@@ -448,7 +448,7 @@ public abstract class AbstractMinifyViewTool {
 				throw new RuntimeException(e);
 			}
 
-			debugUrl = PROXY_SERVLET_URL + hostname + fullPath;
+			debugUrl = getProxyServletUrl(hostname, fullPath);
 		}
 
 		// if needed, set the domain in the debug url

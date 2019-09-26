@@ -1,5 +1,7 @@
 package nl.isaac.dotcms.minify.osgi;
 
+import nl.isaac.dotcms.minify.viewtool.DynamicCssMinifyViewTool;
+import nl.isaac.dotcms.minify.viewtool.DynamicJsMinifyViewTool;
 import org.osgi.framework.BundleContext;
 
 import nl.isaac.dotcms.minify.FileChangedPostHook;
@@ -23,8 +25,8 @@ public class MinifierActivator extends ExtendedGenericBundleActivator {
 		addPostHook(context, FileChangedPostHook.class);
 
 		// Register ViewTools
-		addViewTool(context,        JsMinifyViewTool.class,  "jsMinifyTool", ViewToolScope.REQUEST);
-		addViewTool(context,       CssMinifyViewTool.class, "cssMinifyTool", ViewToolScope.REQUEST);
+		addViewTool(context, DynamicJsMinifyViewTool.class,  "jsMinifyTool", ViewToolScope.REQUEST);
+		addViewTool(context, DynamicCssMinifyViewTool.class, "cssMinifyTool", ViewToolScope.REQUEST);
 
 		// Register the servlet
 		addServlet(context, MinifyServlet.class, "/servlets/MinifyServlet");
