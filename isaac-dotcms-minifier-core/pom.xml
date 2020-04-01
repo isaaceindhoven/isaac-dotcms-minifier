@@ -11,43 +11,57 @@
 	<artifactId>isaac-dotcms-minifier-core</artifactId>
 	<packaging>jar</packaging>
 	
+
 	<name>ISAAC dotCMS Minifier Core</name>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>jarjar-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>jarjar</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<rule>
+									<pattern>com.google.**</pattern>
+									<result>repackage.@1</result>
+								</rule>
+								<rule>
+                                    <pattern>google.protobuf.**</pattern>
+                                    <result>repackage.@1</result>
+                                </rule>
+                                <rule>
+                                    <pattern>javax.annotation.**</pattern>
+                                    <result>repackage.@1</result>
+                                </rule>
+                                <rule>
+                                    <pattern>jsinterop.annotations.**</pattern>
+                                    <result>repackage.@1</result>
+                                </rule>
+                                <rule>
+                                    <pattern>org.kohsuke.**</pattern>
+                                    <result>repackage.@1</result>
+                                </rule>
+							</rules>
+							<includes>com.google.javascript:closure-compiler</includes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 	
 	<dependencies>
 		<dependency>
 			<groupId>com.google.javascript</groupId>
 			<artifactId>closure-compiler</artifactId>
 			<version>v20170806</version>
-			<exclusions>
-				<exclusion>
-					<groupId>args4j</groupId>
-					<artifactId>args4j</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.google.javascript</groupId>
-					<artifactId>closure-compiler-externs</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.google.errorprone</groupId>
-					<artifactId>error_prone_annotations</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.google.guava</groupId>
-					<artifactId>guava</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.google.code.findbugs</groupId>
-					<artifactId>jsr305</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.google.protobuf</groupId>
-					<artifactId>protobuf-java</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.google.jsinterop</groupId>
-					<artifactId>jsinterop-annotations</artifactId>
-				</exclusion>
-			</exclusions>
+			<scope>provided</scope>			
 		</dependency>
 	</dependencies>
 	
