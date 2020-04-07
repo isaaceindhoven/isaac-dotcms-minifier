@@ -22,6 +22,7 @@ import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.categories.model.Category;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPIPostHookAbstractImp;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
+import com.dotmarketing.portlets.contentlet.model.ContentletDependencies;
 import com.dotmarketing.portlets.fileassets.business.FileAsset;
 import com.dotmarketing.portlets.folders.model.Folder;
 import com.dotmarketing.portlets.structure.model.ContentletRelationships;
@@ -38,6 +39,11 @@ public class FileChangedPostHook extends ContentletAPIPostHookAbstractImp {
 			boolean respectFrontendRoles, Contentlet returnValue) {
 		handleContentlet(contentlet);
 	}
+
+	@Override
+    public void checkin(Contentlet contentlet, ContentletDependencies contentletDependencies, Contentlet c) {
+	    handleContentlet(contentlet);
+    }
 
 	@Override
 	public void checkin(Contentlet contentlet, List<Permission> permissions,
