@@ -13,7 +13,7 @@
 		<fileSet>
 			<directory>${basedir}/../isaac-dotcms-minifier-core/target/</directory>
 			<includes>
-				<include>isaac-dotcms-minifier-core-5.2.6-2.jar</include>
+				<include>isaac-dotcms-minifier-core-5.3.7-2.jar</include>
 			</includes>
 			<outputDirectory>${artifactId}/lib/</outputDirectory>
 		</fileSet>
