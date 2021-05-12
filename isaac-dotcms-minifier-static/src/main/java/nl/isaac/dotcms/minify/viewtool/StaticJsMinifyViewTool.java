@@ -9,4 +9,6 @@ public final class StaticJsMinifyViewTool extends JsMinifyViewTool {
 		return Configuration.getProxyServletUrl(hostname, fullPath);
 	}
 
+
+
 }
