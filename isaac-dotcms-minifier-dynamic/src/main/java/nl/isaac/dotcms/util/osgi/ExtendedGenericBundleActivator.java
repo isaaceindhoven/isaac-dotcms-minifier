@@ -454,41 +454,6 @@ public abstract class ExtendedGenericBundleActivator extends GenericBundleActiva
         return properties;
 	}
 
-	/**
-	 * Adds a Job, and starts a Scheduler when none was yet started
-	 */
-	protected void addJob(BundleContext context, Class<? extends Job> clazz, String cronExpression) {
-		String jobName = clazz.getName();
-		String jobGroup = FrameworkUtil.getBundle(clazz).getSymbolicName();
-        JobDetail job = new JobDetail(jobName, jobGroup, clazz);
-        job.setDurability(false);
-        job.setVolatility(true);
-        job.setDescription(jobName);
-
-        try {
-	        CronTrigger trigger = new CronTrigger(jobName, jobGroup, cronExpression);
-
-	        if(scheduler == null) {
-	        	if(schedulerProperties == null) {
-	        		schedulerProperties = getDefaultSchedulerProperties();
-	        	}
-	        	scheduler = new StdSchedulerFactory(schedulerProperties).getScheduler();
-				scheduler.start();
-	        }
-
-			Date date = scheduler.scheduleJob(job, trigger);
-
-			Logger.info(this, "Scheduled job " + jobName + ", next trigger is on " + date);
-
-        } catch (ParseException e) {
-        	Logger.error(this, "Cron expression '" + cronExpression + "' has an exception. Throwing IllegalArgumentException", e);
-        	throw new IllegalArgumentException(e);
-        } catch (SchedulerException e) {
-        	Logger.error(this, "Unable to schedule job " + jobName, e);
-		}
-
-	}
-
 	@Override
 	protected void unregisterServices(BundleContext context) throws Exception {
 		super.unregisterServices(context);
