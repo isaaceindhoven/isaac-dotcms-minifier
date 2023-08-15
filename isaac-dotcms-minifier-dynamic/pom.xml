@@ -34,6 +34,7 @@
 						<Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
 						<Embed-Transitive>true</Embed-Transitive>
 						<Data-Files>conf</Data-Files>
+						<_noee>true</_noee> <!-- For some reason the Require-Capability breaks the plugin deployment in Java 11-->
 					</instructions>
 				</configuration>
 			</plugin>
@@ -46,6 +47,11 @@
 			<artifactId>isaac-dotcms-minifier-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
 		<dependency>
 			<groupId>com.dotcms.lib</groupId>
 			<artifactId>dot.commons-io</artifactId>
