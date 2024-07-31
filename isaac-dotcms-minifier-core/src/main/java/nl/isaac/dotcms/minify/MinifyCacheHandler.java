@@ -14,27 +14,30 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
 import com.dotmarketing.beans.Host;
+import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.CacheLocator;
 import com.dotmarketing.business.DotCacheAdministrator;
 import com.dotmarketing.business.DotCacheException;
 import com.dotmarketing.business.DotStateException;
 import com.dotmarketing.exception.DotDataException;
+import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.fileassets.business.FileAsset;
 import com.dotmarketing.util.Logger;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.SourceFile;
+import com.liferay.portal.model.User;
 
 import nl.isaac.dotcms.minify.compressor.CssCompressor;
 import nl.isaac.dotcms.minify.exception.DotCMSFileNotFoundException;
+import nl.isaac.dotcms.minify.servlet.AbstractMinifyServlet;
 import nl.isaac.dotcms.minify.shared.FileTools;
 import nl.isaac.dotcms.minify.shared.HostTools;
 import nl.isaac.dotcms.minify.util.ParamValidationUtil;
@@ -151,22 +154,29 @@ public enum MinifyCacheHandler {
 				}
 
 			} else if (file.getExtension().equalsIgnoreCase("js")) {
-				Logger.info(MinifyCacheHandler.class, "Compressing js file: " + key.toString());
-				Compiler compiler = new Compiler();
+
+			    Logger.info(MinifyCacheHandler.class, "Compressing js file: " + key.toString());
+
+			    Compiler compiler = new Compiler();
 				CompilerOptions options = new CompilerOptions();
 				CompilationLevel.WHITESPACE_ONLY.setOptionsForCompilationLevel(options);
 
+				String content = replaceImportantCommentInJs(file);
+
 				List<SourceFile> jsFiles = new LinkedList<>();
-				jsFiles.add(SourceFile.fromInputStream(file.getFileName(), input, StandardCharsets.UTF_8));
+				jsFiles.add(SourceFile.fromCode(file.getFileName(), content));
+
 				List<SourceFile> externalJsfiles = new LinkedList<>();
+
 				compiler.compile(externalJsfiles, jsFiles, options);
 				result = compiler.toSource();
 
 			} else {
 				throw new RuntimeException("Uncompressable file extension: " + file.getExtension());
 			}
-		} catch (IOException e) {
+		 } catch (Throwable t) {
 			Logger.warn(MinifyCacheHandler.class, "Can't compress file " + key.toString());
+			Logger.error(MinifyCacheHandler.class, "Can't compress file " + t.getMessage(), t);
 		}
 
 		// If there's no result, get the non-minified data
@@ -190,6 +200,43 @@ public enum MinifyCacheHandler {
 		} catch (DotStateException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private String replaceImportantCommentInJs(FileAsset file) throws IOException {
+	  String jsContent = getFileContent(file, true);
+	  return jsContent.replace("/*!", "/*");
+	}
+
+	private String getFileContent(FileAsset asset, boolean isLiveMode) {
+
+	  String uri = asset.getPath() + asset.getFileName();
+	  Host host = null;
+
+      try {
+
+        User user = APILocator.getUserAPI().getSystemUser();
+        host = APILocator.getHostAPI().find(asset.getHost(), user, true);
+        FileAsset file = FileTools.getFileAssetByURI(uri, host, isLiveMode);
+
+        if (file != null && file.getURI() != null) {
+          StringWriter stringWriter = new StringWriter();
+          InputStream input = file.getInputStream();
+
+          try {
+            IOUtils.copy(input, stringWriter);
+          } finally {
+              input.close();
+          }
+          return stringWriter.toString();
+        }
+
+      } catch (IOException | DotDataException e) {
+          Logger.error(AbstractMinifyServlet.class, "Could not find file", e);
+      } catch (DotSecurityException e) {
+        Logger.error(AbstractMinifyServlet.class, "Error finding file", e);
+      }
+
+      throw new DotCMSFileNotFoundException("Could not find " + (isLiveMode? "live": "working") + " file '" + uri + "' on host '" + asset.getHost() + "'.");
 	}
 
 	private FileAsset getFile(MinifyCacheKey key) throws DotCMSFileNotFoundException {
