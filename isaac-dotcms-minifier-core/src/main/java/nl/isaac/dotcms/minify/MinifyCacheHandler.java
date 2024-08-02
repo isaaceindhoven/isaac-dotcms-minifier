@@ -36,6 +36,7 @@ import com.google.javascript.jscomp.SourceFile;
 import com.liferay.portal.model.User;
 
 import nl.isaac.dotcms.minify.compressor.CssCompressor;
+import nl.isaac.dotcms.minify.conf.Configuration;
 import nl.isaac.dotcms.minify.exception.DotCMSFileNotFoundException;
 import nl.isaac.dotcms.minify.servlet.AbstractMinifyServlet;
 import nl.isaac.dotcms.minify.shared.FileTools;
@@ -204,7 +205,12 @@ public enum MinifyCacheHandler {
 
 	private String replaceImportantCommentInJs(FileAsset file) throws IOException {
 	  String jsContent = getFileContent(file, true);
-	  return jsContent.replace("/*!", "/*");
+
+	  if (Configuration.doRemoveImportantComments()) {
+	    return jsContent.replace("/*!", "/*");
+	  } else {
+	    return jsContent;
+	  }
 	}
 
 	private String getFileContent(FileAsset asset, boolean isLiveMode) {
