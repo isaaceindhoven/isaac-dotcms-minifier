@@ -6,6 +6,8 @@
 	<formats>
 		<format>zip</format>
 	</formats>
+	
+	<id>assembly-id</id>
 
 	<includeBaseDirectory>false</includeBaseDirectory>
 
