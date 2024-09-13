@@ -70,24 +70,24 @@ public class AbstractMinifyServlet extends HttpServlet {
 		return defaultHost;
 	}
 
-	protected String getFileContent(URI uri, Host host, boolean isLiveMode) {
-		FileAsset file = FileTools.getFileAssetByURI(uri.getPath().toString(), host, isLiveMode);
+    protected String getFileContent(URI uri, Host host, boolean isLiveMode) {
+      FileAsset file = FileTools.getFileAssetByURI(uri.getPath().toString(), host, isLiveMode);
 
-		try {
-			if (file != null && file.getURI() != null) {
-				StringWriter stringWriter = new StringWriter();
-				InputStream input = file.getInputStream();
-				try {
-					IOUtils.copy(input, stringWriter);
-				} finally {
-					input.close();
-				}
-				return stringWriter.toString();
-			}
-		} catch (IOException | DotDataException e) {
-			Logger.error(AbstractMinifyServlet.class, "Could not find file", e);
-		}
-		throw new DotCMSFileNotFoundException("Could not find " + (isLiveMode? "live": "working") + " file '" + uri.toString() + "' on host '" + host.getHostname() + "'.");
-	}
+      try {
+          if (file != null && file.getURI() != null) {
+              StringWriter stringWriter = new StringWriter();
+              InputStream input = file.getInputStream();
+              try {
+                  IOUtils.copy(input, stringWriter);
+              } finally {
+                  input.close();
+              }
+              return stringWriter.toString();
+          }
+      } catch (IOException | DotDataException e) {
+          Logger.error(AbstractMinifyServlet.class, "Could not find file", e);
+      }
+      throw new DotCMSFileNotFoundException("Could not find " + (isLiveMode? "live": "working") + " file '" + uri.toString() + "' on host '" + host.getHostname() + "'.");
+  }
 
 }
